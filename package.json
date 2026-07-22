@@ -1,0 +1,12 @@
+{
+  "name": "gerenciador-2-production-build",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node tools/build-production.js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1",
+    "terser": "^5.31.0"
+  }
+}

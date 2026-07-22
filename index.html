@@ -1,0 +1,519 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Gestor de Serviços | Chicago Advisory</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
+                        slate: { 800: '#1e293b', 900: '#0f172a' },
+                        chicago: { 800: '#330309', 900: '#200105' } 
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors duration-300 selection:bg-primary-500 selection:text-white">
+
+    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-900/80 blur-bg flex items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 w-full max-w-sm border border-gray-200 dark:border-slate-700 text-center transform transition-transform">
+            <div class="mb-6 flex justify-center">
+                <img src="./assets/logo.avif" alt="Chicago Advisory Partners" class="h-20 object-contain dark:invert-0 invert">
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Acesso Restrito</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-8">Insira a senha da equipe de QA para acessar o Gestor de Serviços.</p>
+            
+            <div class="space-y-4">
+                <input type="password" id="passInput" class="w-full px-4 py-3.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-xl text-lg focus:ring-2 focus:ring-primary-500 outline-none dark:text-white text-center tracking-[0.3em] font-mono transition-all" placeholder="••••••••" onkeypress="if(event.key === 'Enter') app.checkLogin()">
+                <button onclick="app.checkLogin()" class="w-full px-4 py-3.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-primary-500/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    Desbloquear <i data-lucide="arrow-right" size="16"></i>
+                </button>
+            </div>
+            <p id="loginError" class="text-xs text-red-500 mt-4 hidden font-medium flex items-center justify-center gap-1">
+                <i data-lucide="alert-circle" size="14"></i> Senha incorreta. Tente novamente.
+            </p>
+        </div>
+    </div>
+
+    <div id="guideModal" class="fixed inset-0 z-[110] bg-slate-900/80 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-slate-700 transform transition-transform scale-95 flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="book-open" class="text-primary-500" size="20"></i> Orientações de Execução
+                </h3>
+                <button onclick="app.closeGuideModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+                    <i data-lucide="x" size="24"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                    Siga as diretrizes abaixo para a execução correta dos testes <span class="font-bold text-primary-600 dark:text-primary-400">JSR / No Redirect</span>.
+                </p>
+                <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4">
+                    <h4 class="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 text-sm mb-2">
+                        <i data-lucide="coins" size="16"></i> Pix-Schedulling 1-2 e Pix-Verification 1-2
+                    </h4>
+                    <ul class="text-sm text-blue-700 dark:text-blue-200 space-y-2 list-disc list-inside">
+                        <li>Saldo exigido: <strong>R$ 10,00.</strong> </li>
+                        <li><strong>Atenção:</strong> Para esses dois testes é necessário deixar um saldo um pouco acima do mínimo.  <strong>Se lembre de incluir um print do saldo em conta mesmo em caso de Ok, na execução do teste para não haver contestações por falta de saldo</strong> e retrabalho.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4">
+                    <h4 class="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 text-sm mb-2">
+                        <i data-lucide="coins" size="16"></i> Gestão de Saldo
+                    </h4>
+                    <ul class="text-sm text-blue-700 dark:text-blue-200 space-y-2 list-disc list-inside">
+                        <li>Saldo mínimo exigido: <strong>R$ 2,00</strong> por teste executado.</li>
+                        <li><strong>Atenção:</strong> Após cada teste, verifique se o saldo foi debitado da conta. Em caso positivo, é <strong>obrigatório completar o saldo mínimo</strong> antes de seguir para os próximos testes, evitando falsos erros por falta de saldo e retrabalho.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-100 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 text-sm">
+                            <i data-lucide="smartphone" size="16"></i> Configurações no Dispositivo Mobile
+                        </h4>
+                        <button onclick="app.openImageModal()" class="px-3 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="image" size="14"></i> Visualizar Exemplo
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Prazo do Consentimento</span>
+                            <span class="font-semibold text-sm dark:text-white">Indeterminado</span>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Máx. por Transação</span>
+                            <span class="font-semibold text-sm dark:text-white">R$ 1,00</span>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Valor Máximo Diário</span>
+                            <span class="font-semibold text-sm dark:text-white">R$ 1,00</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-2">
+                        <i data-lucide="info" size="14"></i> Nota: Cada marca possui sua regra de negócio para nomenclatura; não devemos interferir neste ponto.
+                    </p>
+                </div>
+
+                <div class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4">
+                    <h4 class="font-bold text-red-800 dark:text-red-300 flex items-center gap-2 text-sm mb-3">
+                        <i data-lucide="alert-triangle" size="16"></i> Pontos Críticos
+                    </h4>
+                    <ul class="text-sm text-red-700 dark:text-red-200 space-y-3 list-disc list-inside">
+                        <li>
+                            Caso a marca <strong>não possua</strong> a opção de tempo "Indeterminado" dentro do prazo estipulado, <strong>o teste deve ser interrompido imediatamente</strong>. Colete as devidas evidências (print da tela mostrando a ausência da opção no select correspondente).
+                        </li>
+                        <li>
+                            <strong>Validação Obrigatória:</strong> Em algumas marcas, o campo prazo vem preenchido por default como "Indeterminado". É <strong>obrigatório</strong> que o QA abra o dropdown e valide se realmente está configurado corretamente, pois algumas marcas "consideram o prazo de 5 anos" como indeterminado.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-xl p-4">
+                    <h4 class="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2 text-sm mb-2">
+                        <i data-lucide="shield-alert" size="16"></i> Mitigação de Falsos Negativos
+                    </h4>
+                    <p class="text-sm text-orange-700 dark:text-orange-200">
+                        Antes de realizar o teste, entre na conta pertinente e <strong>verifique se a mesma está configurada corretamente como PF ou PJ</strong>. Foi observado que algumas marcas alternam as contas dentro do mesmo aplicativo, o que pode gerar falhas inesperadas na jornada.
+                    </p>
+                </div>
+
+                <div class="mt-4 p-3 bg-gray-100 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 text-center">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Lembrando: caso seja necessário qualquer implementação, ajuste ou ajuda, basta entrar em contato.</p>
+                </div>
+
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 rounded-b-2xl text-right">
+                <button onclick="app.closeGuideModal()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="imageModal" class="fixed inset-0 z-[120] bg-slate-900/90 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex" onclick="app.closeImageModal()">
+        <div class="relative max-w-full max-h-full flex justify-center items-center" onclick="event.stopPropagation()">
+            <button onclick="app.closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
+                <i data-lucide="x" size="32"></i>
+            </button>
+            <img src="./assets/Imagemreferencia.png" alt="Exemplo de Configuração Mobile" class="max-h-[85vh] object-contain rounded-xl shadow-2xl border border-slate-700">
+        </div>
+    </div>
+
+    <aside class="w-72 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 flex flex-col z-20 hidden md:flex transition-colors duration-300 h-full">
+    <div class="p-8 shrink-0 flex flex-col items-center text-center">
+        <h1 class="flex justify-center w-full">
+            <img src="./assets/logo.avif" alt="Chicago Advisory Partners" class="h-20 object-contain dark:invert-0 invert">
+        </h1>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 font-medium">QA Automation Suite V.10</p>
+    </div>
+        <nav class="flex-1 px-6 space-y-2 overflow-y-auto custom-scrollbar">
+            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-4 px-4">Testes FVP</div>
+            <button onclick="app.switchTab('nomenclatura')" id="nav-nomenclatura" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200">
+                <i data-lucide="file-signature" size="20"></i> Nomenclatura
+            </button>
+            <button onclick="app.switchTab('agendamentos')" id="nav-agendamentos" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200">
+                <i data-lucide="calendar-clock" size="20"></i> Agendamentos
+            </button>
+            <button onclick="app.switchTab('relatorios')" id="nav-relatorios" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200">
+                <i data-lucide="clipboard-list" size="20"></i> Relatórios
+            </button>
+
+            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-8 px-4">Testes API</div>
+            <button onclick="app.switchTab('chicago')" id="nav-chicago" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200">
+                <i data-lucide="braces" size="20"></i> Gerador de JSON
+            </button>
+
+            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-8 px-4">Conhecimento</div>
+            <a href="https://alanteixeira87.github.io/Guiadeorienta-o" target="_blank" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-all duration-200">
+                <i data-lucide="book-open" size="20"></i> Guia de Orientação
+                <i data-lucide="external-link" size="14" class="ml-auto opacity-50"></i>
+            </a>
+
+            <div class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 mt-8 px-4">Links Úteis</div>
+            <a href="https://gitlab.com/raidiam-conformance/open-finance/certification/-/wikis/Orientacoes_Execucao_FVP?redirected_from=Scheduled-Tests-[PT]" target="_blank" class="group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-all duration-200">
+                <i data-lucide="external-link" size="20"></i> Documentação wiki OP
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-gray-200 dark:border-slate-700 shrink-0">
+            <button onclick="app.toggleTheme()" class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-all">
+                <span class="flex items-center gap-2"><i data-lucide="moon" size="18"></i> Aparência</span>
+                <div class="w-10 h-5 bg-gray-300 dark:bg-primary-600 rounded-full relative transition-colors">
+                    <div class="absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform dark:translate-x-5"></div>
+                </div>
+            </button>
+        </div>
+    </aside>
+
+    <div class="md:hidden fixed top-0 w-full bg-white dark:bg-slate-800 z-50 px-6 py-4 flex justify-between items-center border-b border-gray-200 dark:border-slate-700 shadow-sm">
+        <span class="flex items-center gap-2">
+            <img src="./assets/logo.avif" alt="Chicago Advisory Partners" class="h-8 object-contain dark:invert-0 invert">
+        </span>
+        <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('h-full'); document.querySelector('aside').classList.toggle('w-full');" class="text-gray-600 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+            <i data-lucide="menu"></i>
+        </button>
+    </div>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-10 relative mt-16 md:mt-0 scroll-smooth custom-scrollbar">
+        
+        <div id="toast" class="fixed top-6 right-6 z-50 translate-x-[120%] opacity-0 transition-all duration-500 ease-out flex items-center w-full max-w-sm p-4 text-gray-600 bg-white rounded-xl shadow-2xl dark:text-gray-300 dark:bg-slate-800 border-l-4 border-green-500 backdrop-blur-sm" role="alert">
+            <div id="toast-icon-bg" class="inline-flex items-center justify-center flex-shrink-0 w-9 h-9 text-green-500 bg-green-100 rounded-lg dark:bg-green-500/20 dark:text-green-400">
+                <i id="toast-icon" data-lucide="check-circle-2" size="20"></i>
+            </div>
+            <div class="ml-4">
+                <h4 id="toast-title" class="text-sm font-semibold text-gray-900 dark:text-white">Sucesso!</h4>
+                <div class="text-xs font-medium mt-0.5" id="toast-msg">Operação realizada.</div>
+            </div>
+        </div>
+
+        <div id="view-nomenclatura" class="hidden fade-in space-y-8 max-w-6xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                <div class="px-8 py-5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800">
+                    <div><h2 class="text-lg font-bold text-gray-900 dark:text-white">Gerador de Nomenclatura</h2><p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Padronização de logs de execução.</p></div>
+                    <button onclick="app.generateLog()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary-500/20 transition-all active:scale-95 flex items-center gap-2"><i data-lucide="wand-2" size="18"></i> Gerar Log</button>
+                </div>
+                <div class="p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste Realizado</label><input list="listTestes" id="logTeste" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" oninput="app.checkSync()"><datalist id="listTestes"></datalist></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">SO</label><select id="logSO" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white"><option>Android</option><option>iOS</option><option>Desktop</option></select></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</label><input type="date" id="logData" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white dark:[color-scheme:dark]" onchange="app.checkSync()"></div>
+                    <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marca</label><input list="listMarcas" id="logMarca" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" oninput="app.syncEvidences(); app.checkSync()"><datalist id="listMarcas"></datalist></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Segmento</label><select id="logSegmento" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" onchange="app.syncEvidences(); app.checkSync()"><option>PF</option><option>PJ</option></select></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</label><select id="logStatus" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-bold dark:text-white" onchange="app.checkSync()"><option class="text-green-300">OK</option><option class="text-red-300">NOK</option><option class="text-yellow-400">DCR</option></select></div>
+                </div>
+                <div id="logGroup" class="hidden border-t border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-900/30 p-6"><div class="flex shadow-sm"><div id="logResult" class="relative flex-grow flex items-center px-4 py-3.5 text-sm font-mono text-primary-600 dark:text-primary-400 bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-l-xl border-r-0 truncate select-all">...</div><button onclick="app.copyText('logResult')" class="inline-flex items-center gap-2 rounded-r-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all border-l"><i data-lucide="copy" size="16"></i> Copiar</button></div></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                <div class="px-8 py-5 border-b border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800"><h2 class="text-lg font-bold text-gray-900 dark:text-white">Nomenclatura de Evidência</h2></div>
+                <div class="p-8 space-y-5">
+                    <div class="group"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Saldo</label><div class="flex shadow-sm hover:shadow-md cursor-pointer" onclick="app.copyText('evResult1')"><div id="evResult1" class="flex-grow px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-l-xl border-r-0 truncate flex items-center">Aguardando...</div><button class="rounded-r-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-gray-400 group-hover:text-primary-500 transition-colors border-l"><i data-lucide="copy" size="18"></i></button></div></div>
+                    <div class="group"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Versão App</label><div class="flex shadow-sm hover:shadow-md cursor-pointer" onclick="app.copyText('evResult2')"><div id="evResult2" class="flex-grow px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-l-xl border-r-0 truncate flex items-center">Aguardando...</div><button class="rounded-r-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-gray-400 group-hover:text-primary-500 transition-colors border-l"><i data-lucide="copy" size="18"></i></button></div></div>
+                    <div class="group"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Erro</label><div class="flex shadow-sm hover:shadow-md cursor-pointer" onclick="app.copyText('evResult3')"><div id="evResult3" class="flex-grow px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-l-xl border-r-0 truncate flex items-center">Aguardando...</div><button class="rounded-r-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-gray-400 group-hover:text-primary-500 transition-colors border-l"><i data-lucide="copy" size="18"></i></button></div></div>
+                    <div class="group"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Saldo Zerado</label><div class="flex shadow-sm hover:shadow-md cursor-pointer" onclick="app.copyText('evResult4')"><div id="evResult4" class="flex-grow px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-l-xl border-r-0 truncate flex items-center">Aguardando...</div><button class="rounded-r-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 text-gray-400 group-hover:text-primary-500 transition-colors border-l"><i data-lucide="copy" size="18"></i></button></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-agendamentos" class="hidden fade-in space-y-8 max-w-6xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                <div class="px-8 py-5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800">
+                    <div><h2 class="text-lg font-bold text-gray-900 dark:text-white">Novo Agendamento</h2><p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Planejamento de testes de longa duração.</p></div>
+                    <div class="flex gap-3"><button onclick="app.saveTest()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm"><i data-lucide="save" size="18"></i> Salvar</button><button id="btnGoogle" onclick="app.openGoogleCalendar()" disabled class="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-sm"><i data-lucide="calendar-plus" size="18"></i> Google</button></div>
+                </div>
+                <div class="p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marca</label><input list="listMarcas" id="agendaMarca" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Segmento</label><select id="agendaSegmento" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"><option>PF</option><option>PJ</option></select></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste</label><select id="agendaTipo" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"><option value="" disabled selected>Selecione...</option><option>Pix Scheduling 1-2</option><option>JSR Pix Verification 1-2</option><option>Pix Retry 1-3</option></select></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Início</label><input type="date" id="agendaInicio" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white dark:[color-scheme:dark]"></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Fim (Auto)</label><input type="date" id="agendaFim" readonly class="w-full px-4 py-3 bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-xl text-sm opacity-60 cursor-not-allowed dark:text-gray-400 dark:[color-scheme:dark]"></div>
+                    <div class="md:col-span-12 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cronograma Detalhado</label><textarea id="agendaInstrucoes" readonly class="w-full px-4 py-3 bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-mono opacity-80 h-32 resize-none dark:text-gray-300"></textarea></div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                <div class="px-8 py-5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800">
+                    <h3 class="font-bold text-gray-900 dark:text-white">Agendamentos Ativos</h3>
+                    <div class="flex gap-2"><button onclick="app.exportData()" class="p-2 text-gray-500 hover:text-primary-600 rounded-lg"><i data-lucide="download" size="20"></i></button><button onclick="app.exportExcel()" class="p-2 text-gray-500 hover:text-green-600 rounded-lg"><i data-lucide="file-spreadsheet" size="20"></i></button></div>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-slate-900/50 dark:text-gray-400 border-b border-gray-200 dark:border-slate-700"><tr><th class="px-6 py-4">Marca</th><th class="px-6 py-4">Segmento</th><th class="px-6 py-4">Teste</th><th class="px-6 py-4">Início</th><th class="px-6 py-4">Fim</th><th class="px-6 py-4 text-right">Ações</th></tr></thead><tbody id="scheduleTable" class="divide-y divide-gray-100 dark:divide-slate-700"></tbody></table></div>
+            </div>
+            <div class="border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl p-10 text-center hover:border-primary-500 transition-all cursor-pointer" onclick="document.getElementById('importFile').click()">
+                <div class="flex flex-col items-center gap-3"><i data-lucide="upload-cloud" class="text-gray-400" size="28"></i><p class="text-sm font-semibold text-gray-900 dark:text-white">Restaurar Dados</p><input type="file" id="importFile" accept=".json" class="hidden" onchange="app.importData(this)"></div>
+            </div>
+        </div>
+
+        <div id="view-relatorios" class="hidden fade-in space-y-8 max-w-6xl mx-auto">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                <div class="px-8 py-5 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800"><div><h2 class="text-lg font-bold text-gray-900 dark:text-white">Gerador de Relatórios</h2><p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Padronização de resultados (NOK / OK).</p></div></div>
+                <div class="p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-12 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qual é o cenário do teste?</label><select id="errorStage" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white" onchange="app.updateErrorReport()"><option value="1">1. Erro antes do redirecionamento</option><option value="2">2. Erro durante o login</option><option value="3">3. Erro durante o consentimento</option><option value="4">4. Erro no retorno à FVP</option><option value="5">5. Teste realizado com sucesso</option><option value="6">6. Evidência de saldo disponível</option><option value="7">7. Saldo zerado e agendamento</option></select></div>
+                </div>
+                <div class="border-t border-gray-200 dark:border-slate-700 bg-gray-50/80 dark:bg-slate-900/30 p-6">
+                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Preview</label>
+                    <div class="relative"><textarea id="errorResult" class="w-full p-4 text-sm font-mono text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-xl h-64 resize-y"></textarea><button onclick="app.copyText('errorResult')" class="absolute top-3 right-3 px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg border border-gray-200 dark:border-slate-600 flex items-center gap-2"><i data-lucide="copy" size="14"></i> Copiar</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-chicago" class="hidden fade-in space-y-8 max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">QA Automation Suite V.10</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Geração de massa de dados para testes de Open Finance.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button onclick="chicago.exportSession()" class="px-3 py-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 shadow-sm transition flex items-center gap-2">
+                        <i data-lucide="download" size="16"></i> Backup Local
+                    </button>
+                    <button onclick="document.getElementById('chi_importFile').click()" class="px-3 py-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 shadow-sm transition flex items-center gap-2">
+                        <i data-lucide="upload" size="16"></i> Restaurar
+                    </button>
+                    <input type="file" id="chi_importFile" accept=".json" class="hidden" onchange="chicago.importSession(this)">
+                </div>
+            </div>
+
+            <div id="releaseNote" class="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-5 relative fade-in">
+                <button onclick="document.getElementById('releaseNote').style.display='none'" class="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors">
+                    <i data-lucide="x" size="20"></i>
+                </button>
+                <div class="flex gap-4">
+                    <div class="mt-1 bg-indigo-100 dark:bg-indigo-500/20 p-2.5 rounded-xl text-indigo-600 dark:text-indigo-400 shrink-0 h-min">
+                        <i data-lucide="bell-ring" size="22"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-indigo-900 dark:text-indigo-300 text-sm md:text-base uppercase tracking-wider">📣 Atualizações </h4>
+                        <ul class="text-sm text-indigo-800 dark:text-indigo-200 mt-2 space-y-1.5 list-disc list-inside ml-1">
+                            <li><strong>QA Automation Suite V.10:</strong> nova organização visual e atualização dos payloads de testes.</li>
+                            <li>Testes separados e ordenados nos grupos <strong>Open FVP</strong> e <strong>Restricted FVP</strong>, com cores e contraste aprimorados.</li>
+                            <li>Adicionados os testes <strong>Payments API v5.0.1 Open</strong> e <strong>Payments API v4/v5 Scheduling</strong> para PF e PJ.</li>
+                            <li>Payload de <strong>Enrollments Payments Scheduling</strong> atualizado com os dados de identificação do usuário.</li>
+                            <li>O campo <strong>Alias</strong> foi removido da interface e dos JSONs; o <strong>AS-ID</strong> continua sendo preenchido conforme marca e segmento.</li>
+                            <li>As regras existentes dos testes <strong>JO e Sweeping</strong> foram preservadas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                
+                <div class="xl:col-span-4 space-y-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden ring-1 ring-black/5">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2"><i data-lucide="database" size="18" class="text-primary-500"></i> Configuração de Dados</h3>
+                            <button onclick="chicago.saveSession()" class="text-xs px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 shadow-sm transition flex items-center gap-1.5 font-medium">
+                                <i data-lucide="save" size="14"></i> Salvar 
+                            </button>
+                        </div>
+                        
+                        <div class="p-6 max-h-[600px] overflow-y-auto space-y-8 custom-scrollbar">
+                            <div class="space-y-4">
+                                <h4 class="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider border-b border-gray-200 dark:border-slate-700 pb-2 flex items-center gap-2"><i data-lucide="user" size="16"></i> Pessoa Física (PF)</h4>
+                                <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Nome Completo</label><input type="text" id="chi_usuario" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white" oninput="this.value = this.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '')"></div>
+                                <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">CPF</label><input type="text" id="chi_cpf" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" maxlength="11" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="Apenas números"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">ISPB</label><input type="text" id="chi_ispb" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Issuer</label><input type="text" id="chi_issuer" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Conta Bancária</label><input type="text" id="chi_conta" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Tipo de Conta</label><input type="text" id="chi_tipo" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white uppercase" oninput="this.value = this.value.replace(/[^a-zA-Z]/g, '')" placeholder="Ex: TRAN"></div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                                <h4 class="text-sm font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider pb-2 flex items-center gap-2"><i data-lucide="building-2" size="16"></i> Pessoa Jurídica (PJ)</h4>
+                                <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Nome da Empresa</label><input type="text" id="chi_empresa" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white"></div>
+                                <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">CNPJ</label><input type="text" id="chi_cnpj" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" maxlength="14" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="Apenas números"></div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">ISPB (PJ)</label><input type="text" id="chi_ispbpj" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Issuer (PJ)</label><input type="text" id="chi_issuerpj" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Conta Bancária PJ</label><input type="text" id="chi_contapj" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white font-mono" oninput="this.value = this.value.replace(/\D/g, '')"></div>
+                                    <div><label class="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">Tipo de Conta PJ</label><input type="text" id="chi_tipopj" class="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 rounded-lg text-sm dark:text-white uppercase" oninput="this.value = this.value.replace(/[^a-zA-Z]/g, '')"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-8 space-y-6 flex flex-col">
+                    
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden flex-shrink-0">
+                        <div class="p-6 bg-gradient-to-r from-gray-50 to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-gray-200 dark:border-slate-700 space-y-4">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-gray-200 dark:border-slate-700/50">
+                                <div>
+                                    <label class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">Marca</label>
+                                    <input type="text" id="chi_brand" list="chi_brand_list" oninput="chicago.onBrandSelect()" autocomplete="on" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:text-white shadow-sm" placeholder="Digite o nome da instituição...">
+                                    <datalist id="chi_brand_list"></datalist>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">AS-ID (Auth Server)</label>
+                                    <input type="text" id="chi_as_id" class="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:text-white shadow-sm" placeholder="Ex: 12345-abcde">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                
+                                <div class="md:col-span-3">
+                                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">Seg.</label>
+                                    <select id="chi_select_segment" onchange="chicago.onBrandSelect()" class="w-full px-3 py-3 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary-500 outline-none dark:text-white cursor-pointer shadow-sm">
+                                        <option value="pf">PF</option>
+                                        <option value="pj">PJ</option>
+                                    </select>
+                                </div>
+
+                                <div class="md:col-span-9 test-selector-panel">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Tipo de Teste (Payload)</label>
+                                        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide" aria-hidden="true">
+                                            <span class="test-status-chip test-status-open"><span></span>Open</span>
+                                            <span class="test-status-chip test-status-restricted"><span></span>Restricted</span>
+                                        </div>
+                                    </div>
+                                    <div class="test-select-wrap">
+                                        <i data-lucide="list-filter" size="17" class="test-select-icon"></i>
+                                        <select id="chi_select_test" class="test-selector w-full py-3 pr-10 bg-white dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer truncate">
+                                            <optgroup label="OPEN FVP">
+                                                <option value="payments">Automatic Payments API - v2.2.0 - Automatic Pix - Open FVP</option>
+                                                <option value="sweeping">Automatic Payments API - v2.2.0 - Sweeping - Open FVP</option>
+                                                <option value="customer_data_v3">Customer Data APIs - v2/v3 - Happy Path - Open FVP</option>
+                                                <option value="no_redirect_auto_novo">Enrollments API - v2.2.0 - Automatic Payments - Open FVP</option>
+                                                <option value="no_redirect_pix_novo">Enrollments API - v2.2.0 - Payments - Open FVP</option>
+                                                <option value="opt_auto_v1">Optimised Journey - v1.0 - Automatic Payments API - v2.2.0 - Open FVP</option>
+                                                <option value="opt_core_v1">Optimised Journey - v1.0 - Core - Open FVP</option>
+                                                <option value="opt_noredirect_v1">Optimised Journey - v1.0 - Enrollments API - v2.2.0 - Open FVP</option>
+                                                <option value="e2e">Payments API - v4.0.1 - Open FVP</option>
+                                                <option value="payments_v5_open">Payments API - v5.0.1 - Open FVP</option>
+                                            </optgroup>
+                                            <optgroup label="RESTRICTED FVP">
+                                                <option value="scheduling">Automatic Payments API - v2.2.0 - Automatic Pix Scheduling - Restricted FVP</option>
+                                                <option value="no_redirect_auto_sched_novo">Enrollments API - v2.2.0 - Automatic Pix Scheduling - Restricted FVP</option>
+                                                <option value="no_redirect_sched_novo">Enrollments API - v2.2.0 - Payments Scheduling - Restricted FVP</option>
+                                                <option value="payments_v4_scheduling">Payments API - v4.0.1 - Scheduling - Restricted FVP</option>
+                                                <option value="payments_v5_scheduling">Payments API - v5.0.1 - Scheduling - Restricted FVP</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                <div class="md:col-span-3">
+                                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">Execucao</label>
+                                    <select id="chi_execution_type" onchange="chicago.toggleSdTicket()" class="w-full px-3 py-3 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary-500 outline-none dark:text-white cursor-pointer shadow-sm">
+                                        <option value="Test">Test</option>
+                                        <option value="Retest">Retest</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">Cycle</label>
+                                    <select id="chi_cycle" class="w-full px-3 py-3 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary-500 outline-none dark:text-white cursor-pointer shadow-sm">
+                                        <option value="Julho-26">Julho-26</option>
+                                        <option value="Agosto-26">Agosto-26</option>
+                                        <option value="Setembro-26">Setembro-26</option>
+                                        <option value="Outubro-26">Outubro-26</option>
+                                    </select>
+                                </div>
+                                <div id="chi_sd_ticket_group" class="md:col-span-6 hidden">
+                                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">SDticket</label>
+                                    <input type="text" id="chi_sd_ticket" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none dark:text-white shadow-sm" placeholder="Informe o SDticket">
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-3 mt-4">
+                                <button onclick="chicago.generateFromSelect()" class="flex-1 px-4 py-3 bg-gray-900 hover:bg-black dark:bg-primary-600 dark:hover:bg-primary-500 text-white text-sm font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                                    <i data-lucide="zap" size="18"></i> Gerar JSON
+                                </button>
+                                <button onclick="app.openGuideModal()" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-slate-600 text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
+                                    <i data-lucide="book-open" size="18"></i> Orientações de Execução
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1e1e1e] rounded-2xl shadow-xl flex-1 flex flex-col overflow-hidden relative border border-gray-800 min-h-[400px]">
+                        <div class="px-5 py-3 bg-[#2d2d2d] flex justify-between items-center border-b border-black">
+                            <span class="text-xs font-mono text-gray-400 flex items-center gap-2"><i data-lucide="terminal" size="14"></i> payload_request.json</span>
+                            <button onclick="app.copyText('chi_result')" class="text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-lg transition">
+                                <i data-lucide="copy" size="14"></i> Copiar Código
+                            </button>
+                        </div>
+                        <textarea id="chi_result" readonly class="flex-1 w-full bg-transparent text-green-400 font-mono text-sm p-6 resize-none outline-none custom-scrollbar" placeholder="// Preencha os campos e clique em Gerar JSON..."></textarea>
+                        
+                        <div class="bg-[#151515] p-4 border-t border-black flex justify-between items-center">
+                            <span class="text-xs text-gray-500 font-mono flex items-center gap-1"><i data-lucide="check-circle-2" size="12" class="text-emerald-500"></i> JSON Pronto para Uso</span>
+                            
+                            <div class="tooltip">
+                                <button onclick="enviarParaFVP()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow flex items-center gap-2 transition">
+                                    Executar no FVP <i data-lucide="external-link" size="16"></i>
+                                </button>
+                                <span class="tooltiptext">Copia o JSON e abre o Conformance Suite Raidiam</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="mt-12 pt-6 border-t border-gray-200 dark:border-slate-800 text-center pb-8">
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1.5 font-medium">
+                    <i data-lucide="code-2" size="14" class="text-primary-500"></i>
+                    Módulo desenvolvido por <span class="font-bold text-gray-700 dark:text-gray-300">Ygor Jardim</span>
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="config.local.js" defer></script>
+    <script src="brand-mapping.js" defer></script>
+    <script src="script.js" defer></script>
+</body>
+</html>

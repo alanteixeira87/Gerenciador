@@ -403,7 +403,7 @@ const app = {
         this.closeScheduleConflictModal();
         this.switchTab('agendamentos');
     },
-    checkSync: function() { 
+    checkSync: function() {
         const f = { teste: document.getElementById('logTeste').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         const scheduledTestMap = this.getScheduledTestMap();
         const scheduleType = scheduledTestMap[f.teste];

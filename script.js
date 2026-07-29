@@ -107,20 +107,32 @@ const app = {
 
         const testValue = select.value;
         const testLabel = select.options[select.selectedIndex]?.textContent.trim() || "";
-        const sections = [...document.querySelectorAll('.guide-section[data-guide-tests]')];
-        let visibleSections = 0;
-
-        sections.forEach(section => {
+        const sections = [...document.querySelectorAll('.guide-card[data-guide-tests]')];
+        const relevantSections = sections.filter(section => {
             const supportedTests = section.dataset.guideTests.split(',').map(item => item.trim());
-            const isRelevant = supportedTests.includes(testValue);
-            section.classList.toggle('hidden', !isRelevant);
-            if (isRelevant) visibleSections++;
+            return supportedTests.includes(testValue);
         });
 
         const selectedTest = document.getElementById('guideSelectedTest');
         if (selectedTest) selectedTest.textContent = testLabel;
 
-        const hasGuide = visibleSections > 0;
+        const scopeSelect = document.getElementById('guideScopeSelect');
+        const scopeField = document.getElementById('guideScopeField');
+        if (scopeSelect) {
+            scopeSelect.innerHTML = '';
+            relevantSections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section.dataset.guideKey;
+                option.textContent = section.dataset.guideLabel;
+                scopeSelect.appendChild(option);
+            });
+        }
+        if (scopeField) scopeField.classList.toggle('hidden', relevantSections.length === 0);
+
+        const hasGuide = relevantSections.length > 0;
+        if (hasGuide) this.selectGuideScope(relevantSections[0].dataset.guideKey);
+        else sections.forEach(section => section.classList.add('hidden'));
+
         button.classList.toggle('guide-button-available', hasGuide);
         button.setAttribute('aria-label', hasGuide
             ? `Há orientações de execução para ${testLabel}`
@@ -136,6 +148,14 @@ const app = {
             }, 4200);
         }
         return hasGuide;
+    },
+
+    selectGuideScope: function(guideKey) {
+        document.querySelectorAll('.guide-card[data-guide-key]').forEach(section => {
+            section.classList.toggle('hidden', section.dataset.guideKey !== guideKey);
+        });
+        const scopeSelect = document.getElementById('guideScopeSelect');
+        if (scopeSelect && scopeSelect.value !== guideKey) scopeSelect.value = guideKey;
     },
 
     onTestGuideChange: function() {
@@ -332,8 +352,10 @@ const app = {
         const brand = document.getElementById('agendaMarca').value || "MARCA";
         const seg = document.getElementById('agendaSegmento').value;
         if (!type || !startStr) return;
-        const isRetry = type.includes("Retry");
-        const days = isRetry ? 3 : 2;
+        const isSuccessfulRetry = type.includes("Successful Retry");
+        const isRetry = type.includes("Retry") && !isSuccessfulRetry;
+        const isSingleDebit = type === "Pix Scheduling 1-2" || type === "JSR Automatic Pix Scheduling 1-2";
+        const days = 3;
         const start = new Date(startStr + 'T00:00:00');
         const end = new Date(start);
         end.setDate(start.getDate() + days);
@@ -342,12 +364,18 @@ const app = {
         const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
         const add = (d, n) => { const x = new Date(d); x.setDate(d.getDate()+n); return x; };
         let txt = `=== 📋 GUIA: ${brand.toUpperCase()} [${seg}] ===\nTeste: ${type}\n\n`;
-        if (isRetry) {
-            txt += `💰 SALDO: R$ 0,00 (Obrigatório)\n🚫 Bloqueio TOTAL de pagamentos.\n📅 CRONOGRAMA:\n`;
-            txt += `[ ] ${fmt(add(start,0))} (D+0): R$ 0,00\n[ ] ${fmt(add(start,1))} (D+1): R$ 0,00\n[ ] ${fmt(add(start,2))} (D+2): R$ 0,00\n[👉] ${fmt(add(start,3))} (D+3): Pagar R$ 1,00`;
+        if (isSuccessfulRetry) {
+            txt += `💰 SALDO: R$ 0,00 até D+2; disponibilizar R$ 1,00 antes da tentativa de D+3.\n🚫 Cheque especial e limites devem estar desabilitados.\n📅 CRONOGRAMA:\n`;
+            txt += `[ ] ${fmt(add(start,0))} (D+0): Conta sem saldo\n[ ] ${fmt(add(start,1))} (D+1): Conta sem saldo\n[ ] ${fmt(add(start,2))} (D+2): Conta sem saldo\n[👉] ${fmt(add(start,3))} (D+3): Disponibilização e liquidação de R$ 1,00\n\n📎 Anexar a evidência do crédito previamente agendado em outra instituição.`;
+        } else if (isRetry) {
+            txt += `💰 SALDO: R$ 0,00 de D+0 até D+2.\n🚫 Cheque especial e limites devem estar desabilitados.\n📅 CRONOGRAMA:\n`;
+            txt += `[ ] ${fmt(add(start,0))} (D+0): Conta sem saldo\n[ ] ${fmt(add(start,1))} (D+1): Conta sem saldo\n[ ] ${fmt(add(start,2))} (D+2): Conta sem saldo\n[ ] ${fmt(add(start,3))} (D+3): Saldo indiferente; sem débito esperado`;
+        } else if (isSingleDebit) {
+            txt += `💰 SALDO: R$ 1,00 disponível antes da liquidação em D+2.\n📅 CRONOGRAMA:\n`;
+            txt += `[ ] ${fmt(add(start,0))} (D+0): Sem débito\n[ ] ${fmt(add(start,1))} (D+1): Sem débito\n[👉] ${fmt(add(start,2))} (D+2): Liquidação de R$ 1,00\n[ ] ${fmt(add(start,3))} (D+3): Apenas validação; sem novo débito`;
         } else {
-            txt += `💰 SALDO: Mínimo R$ 5,00\n📅 CRONOGRAMA:\n`;
-            txt += `[ ] ${fmt(add(start,0))} (D+0): Saldo R$ 2,00\n[ ] ${fmt(add(start,1))} (D+1): Saldo R$ 2,00\n[ ] ${fmt(add(start,2))} (D+2): Saldo R$ 1,00`;
+            txt += `💰 SALDO: Mínimo R$ 2,00 antes de D+1.\n📅 CRONOGRAMA:\n`;
+            txt += `[ ] ${fmt(add(start,0))} (D+0): Sem débito\n[👉] ${fmt(add(start,1))} (D+1): Liquidação de R$ 1,00\n[👉] ${fmt(add(start,2))} (D+2): Liquidação de R$ 1,00\n[ ] ${fmt(add(start,3))} (D+3): Apenas validação; sem novo débito`;
         }
         document.getElementById('agendaInstrucoes').value = txt;
     },

@@ -65,55 +65,68 @@
             <div id="guideModalContent" class="p-6 overflow-y-auto custom-scrollbar space-y-6">
                 
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Orientações pertinentes ao teste selecionado: <span id="guideSelectedTest" class="font-bold text-primary-600 dark:text-primary-400"></span>.
+                    Payload selecionado: <span id="guideSelectedTest" class="font-bold text-primary-600 dark:text-primary-400"></span>.
                 </p>
-                <div data-guide-tests="scheduling" class="guide-section space-y-4">
-                    <div class="guide-card">
-                        <h4>Automatic Pix Scheduling</h4>
-                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling_1-2_test-module_v2-2</p>
-                        <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
-                        <p>O saldo total deve estar disponível antes do início e permanecer na conta durante os três dias. A insuficiência em qualquer etapa poderá causar falha operacional.</p>
-                    </div>
-                    <div class="guide-card">
-                        <h4>Automatic Pix Scheduling Retry</h4>
-                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-retry_1-3_test-module_v2-2</p>
-                        <p><strong>Saldo necessário: R$ 0,00.</strong> A conta deve permanecer sem saldo de D+0 até D+3.</p>
-                        <p>O teste valida tentativas de cobrança sem saldo. Qualquer crédito durante o período poderá alterar o comportamento esperado e ocasionar falha operacional.</p>
-                    </div>
-                    <div class="guide-card">
-                        <h4>Automatic Pix Scheduling Successful Retry</h4>
-                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-successful-retry_1-3_test-module_v2-2</p>
-                        <p><strong>Saldo inicial: R$ 0,00.</strong> Disponibilizar R$ 1,00 antes da tentativa de D+3.</p>
-                        <p>A conta deve permanecer sem saldo nas primeiras tentativas. O crédito de R$ 1,00 deve ser agendado previamente por outra instituição e a evidência do agendamento deve acompanhar o log.</p>
-                    </div>
+
+                <div id="guideScopeField" class="space-y-2">
+                    <label for="guideScopeSelect" class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">Teste aplicável ao escopo</label>
+                    <select id="guideScopeSelect" onchange="app.selectGuideScope(this.value)" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white cursor-pointer"></select>
                 </div>
 
-                <div data-guide-tests="no_redirect_auto_sched_novo" class="guide-section guide-card">
+                <div data-guide-tests="scheduling" data-guide-key="automatic-pix-scheduling" data-guide-label="Automatic Pix Scheduling — teste 1-2" class="guide-card hidden">
+                    <h4>Automatic Pix Scheduling</h4>
+                    <p class="guide-id">automatic-payments_api_automatic-pix-scheduling_1-2_test-module_v2-2</p>
+                    <p><strong>Saldo necessário: R$ 1,00 disponível na data de liquidação, em D+2.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0 criação e autorização, sem débito; D+1 sem débito; D+2 liquidação de R$ 1,00; D+3 validação pelo teste 2-2, sem novo débito. <strong>Total debitado: R$ 1,00.</strong></p>
+                    <p>O teste 1-2 cria uma recorrência semanal, sem pagamento imediato. Garanta o saldo antes de D+2. Verifique também cheque especial ou limite ativo, pois a liquidação poderá deixar a conta negativa mesmo sem saldo disponível.</p>
+                </div>
+
+                <div data-guide-tests="scheduling" data-guide-key="automatic-pix-scheduling-retry" data-guide-label="Automatic Pix Scheduling Retry — teste 1-3" class="guide-card hidden">
+                    <h4>Automatic Pix Scheduling Retry</h4>
+                    <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-retry_1-3_test-module_v2-2</p>
+                    <p><strong>Condição de saldo: R$ 0,00 de D+0 até D+2.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0, D+1 e D+2 com a conta sem saldo; em D+3 o saldo é indiferente para a conclusão. <strong>Total debitado: R$ 0,00.</strong></p>
+                    <p>Qualquer crédito entre D+0 e D+2 poderá liquidar o pagamento e invalidar o comportamento esperado. O cheque especial e qualquer limite de conta devem estar desabilitados.</p>
+                </div>
+
+                <div data-guide-tests="scheduling" data-guide-key="automatic-pix-scheduling-successful-retry" data-guide-label="Automatic Pix Scheduling Successful Retry — teste 1-3" class="guide-card hidden">
+                    <h4>Automatic Pix Scheduling Successful Retry</h4>
+                    <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-successful-retry_1-3_test-module_v2-2</p>
+                    <p><strong>Saldo inicial: R$ 0,00. Disponibilize R$ 1,00 antes da tentativa prevista para D+3.</strong></p>
+                    <p><strong>Cronograma:</strong> conta sem saldo em D+0, D+1 e D+2; disponibilização e liquidação de R$ 1,00 em D+3. <strong>Total debitado: R$ 1,00.</strong></p>
+                    <p>O crédito deve ser previamente agendado a partir de outra instituição. Anexe a evidência do agendamento ao log. Mantenha cheque especial e limites desabilitados para evitar liquidação antecipada.</p>
+                </div>
+
+                <div data-guide-tests="no_redirect_auto_sched_novo" data-guide-key="enrollments-automatic-pix-scheduling" data-guide-label="Enrollments — Automatic Pix Scheduling — teste 1-2" class="guide-card hidden">
                     <h4>Enrollments — Automatic Payments — Automatic Pix Scheduling</h4>
                     <p class="guide-id">enrollments_api_automatic-payments_automatic-pix-scheduling_1-2_test-module_v2-2</p>
-                    <p><strong>Saldo mínimo: R$ 2,00.</strong> Débitos previstos: D+0 R$ 1,00; D+1 R$ 0,00; D+2 R$ 1,00; D+3 R$ 0,00.</p>
-                    <p>O valor total deve estar disponível para as cobranças de D+0 e D+2. Quando houver crédito por outra instituição, faça o agendamento antecipadamente e anexe sua evidência ao log.</p>
+                    <p><strong>Saldo necessário: R$ 1,00 disponível na data de liquidação, em D+2.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0 criação e autorização, sem débito; D+1 sem débito; D+2 liquidação de R$ 1,00; D+3 apenas validação. <strong>Total debitado: R$ 1,00.</strong></p>
+                    <p>A execução ocorre por Jornada sem Redirecionamento (JSR), mas segue as mesmas regras de saldo e liquidação do teste da Automatic Payments API. Verifique cheque especial ou limite ativo.</p>
                 </div>
 
-                <div data-guide-tests="no_redirect_sched_novo" class="guide-section guide-card">
+                <div data-guide-tests="no_redirect_sched_novo" data-guide-key="enrollments-scheduled-pix-verification" data-guide-label="Enrollments — Scheduled Pix Verification — teste 1-2" class="guide-card hidden">
                     <h4>Enrollments — Payments — Scheduled Pix Verification</h4>
                     <p class="guide-id">enrollments_api_payments_scheduled-pix-verification_1-2_test-module_v4</p>
-                    <p><strong>Saldo mínimo: R$ 2,00.</strong> Débitos previstos: D+0 R$ 1,00; D+1 R$ 0,00; D+2 R$ 1,00; D+3 R$ 0,00.</p>
-                    <p>O valor total deve estar disponível para as cobranças de D+0 e D+2. Quando houver crédito por outra instituição, realize o agendamento antecipadamente e anexe a evidência ao log.</p>
+                    <p><strong>Saldo mínimo necessário: R$ 2,00.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0 sem débito; D+1 débito de R$ 1,00; D+2 débito de R$ 1,00; D+3 apenas validação. <strong>Total debitado: R$ 2,00.</strong></p>
+                    <p>O teste 1-2 realiza dois agendamentos. Mantenha o valor total disponível antes de D+1 e confira novamente antes de D+2. A jornada ocorre por JSR, com as mesmas regras da Payments API v5.</p>
                 </div>
 
-                <div data-guide-tests="payments_v4_scheduling" class="guide-section guide-card">
+                <div data-guide-tests="payments_v4_scheduling" data-guide-key="payments-v4-scheduled-pix-verification" data-guide-label="Payments API v4 — Scheduled Pix Verification — teste 1-2" class="guide-card hidden">
                     <h4>Payments API v4.0.1 — Scheduled Pix Verification</h4>
                     <p class="guide-id">payments_api_scheduled-pix-verification_1-2_test-module_v4</p>
-                    <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
-                    <p>O saldo total deve estar disponível antes do início e ser suficiente durante todo o período. Valor inferior ao necessário poderá ocasionar falha operacional.</p>
+                    <p><strong>Saldo mínimo necessário: R$ 2,00.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0 sem débito; D+1 débito de R$ 1,00; D+2 débito de R$ 1,00; D+3 apenas validação. <strong>Total debitado: R$ 2,00.</strong></p>
+                    <p>O teste 1-2 valida os dois agendamentos e o teste 2-2 verifica as liquidações. Mantenha R$ 2,00 antes de D+1 e confira o saldo antes de D+2. A versão v4.0.1 tem descontinuação prevista para agosto de 2026.</p>
                 </div>
 
-                <div data-guide-tests="payments_v5_scheduling" class="guide-section guide-card">
+                <div data-guide-tests="payments_v5_scheduling" data-guide-key="payments-v5-scheduled-pix-verification" data-guide-label="Payments API v5 — Scheduled Pix Verification — teste 1-2" class="guide-card hidden">
                     <h4>Payments API v5.0.1 — Scheduled Pix Verification</h4>
                     <p class="guide-id">payments_api_scheduled-pix-verification_1-2_test-module_v5</p>
-                    <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
-                    <p>O saldo total deve estar disponível antes do início e ser suficiente durante todo o período de validação. Valor inferior ao necessário poderá ocasionar falha operacional.</p>
+                    <p><strong>Saldo mínimo necessário: R$ 2,00.</strong></p>
+                    <p><strong>Cronograma:</strong> D+0 sem débito; D+1 débito de R$ 1,00; D+2 débito de R$ 1,00; D+3 apenas validação. <strong>Total debitado: R$ 2,00.</strong></p>
+                    <p>O teste 1-2 cria e valida os dois agendamentos; o teste 2-2 confirma as liquidações. Mantenha o valor disponível antes de D+1 e confira novamente antes de D+2. A falta de saldo em uma das datas compromete a validação posterior.</p>
                 </div>
 
                 <div id="guideGlobalNote" class="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-xl p-4">
@@ -248,7 +261,7 @@
                 <div class="p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marca</label><input list="listMarcas" id="agendaMarca" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"></div>
                     <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Segmento</label><select id="agendaSegmento" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"><option>PF</option><option>PJ</option></select></div>
-                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste</label><select id="agendaTipo" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"><option value="" disabled selected>Selecione...</option><option>Pix Scheduling 1-2</option><option>JSR Pix Verification 1-2</option><option>Pix Retry 1-3</option></select></div>
+                    <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste</label><select id="agendaTipo" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white"><option value="" disabled selected>Selecione...</option><option>Pix Scheduling 1-2</option><option>Pix Retry 1-3</option><option>Pix Successful Retry 1-3</option><option>JSR Automatic Pix Scheduling 1-2</option><option>JSR Pix Verification 1-2</option><option>Payments v4 Pix Verification 1-2</option><option>Payments v5 Pix Verification 1-2</option></select></div>
                     <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Início</label><input type="date" id="agendaInicio" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm dark:text-white dark:[color-scheme:dark]"></div>
                     <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data Fim (Auto)</label><input type="date" id="agendaFim" readonly class="w-full px-4 py-3 bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-xl text-sm opacity-60 cursor-not-allowed dark:text-gray-400 dark:[color-scheme:dark]"></div>
                     <div class="md:col-span-12 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cronograma Detalhado</label><textarea id="agendaInstrucoes" readonly class="w-full px-4 py-3 bg-gray-100 dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-xl text-sm font-mono opacity-80 h-32 resize-none dark:text-gray-300"></textarea></div>

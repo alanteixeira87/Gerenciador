@@ -316,6 +316,11 @@ const app = {
     generateLog: function() {
         const f = { teste: document.getElementById('logTeste').value, so: document.getElementById('logSO').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         if(!f.teste || !f.marca) { this.showToast("Preencha Marca e Teste!", "error"); return; }
+        const conflict = this.findScheduleConflict(f);
+        if (conflict) {
+            this.openScheduleConflictModal(f, conflict);
+            return;
+        }
         const str = `${f.status} - ${f.marca} - ${f.seg} - ${f.teste} - ${f.data.split('-').reverse().join('-')} - ${f.so}`;
         document.getElementById('logResult').textContent = str;
         document.getElementById('logGroup').classList.remove('hidden');
@@ -335,9 +340,8 @@ const app = {
         const txt = el.value !== undefined ? el.value : el.textContent;
         navigator.clipboard.writeText(txt).then(() => this.showToast('Copiado para a área de transferência!'));
     },
-    checkSync: function() { 
-        const f = { teste: document.getElementById('logTeste').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
-        const scheduledTestMap = {
+    getScheduledTestMap: function() {
+        return {
             "Pix Scheduling 1-2": "Pix Scheduling 1-2",
             "Pix Retry 1-3": "Pix Retry 1-3",
             "Pix Successful Retry 1-3": "Pix Successful Retry 1-3",
@@ -348,8 +352,73 @@ const app = {
             "Payments v4 Pix Verification 1-2": "Payments v4 Pix Verification 1-2",
             "Payments v5 Pix Verification 1-2": "Payments v5 Pix Verification 1-2"
         };
+    },
+    getBalanceRule: function(testType) {
+        if (testType === "Pix Retry 1-3") return "zero";
+        if (testType === "Pix Successful Retry 1-3") return "mixed";
+        return "funded";
+    },
+    findScheduleConflict: function(form) {
+        const scheduleType = this.getScheduledTestMap()[form.teste];
+        if (!scheduleType || !form.marca || !form.data || form.status !== 'OK') return null;
+        const newRule = this.getBalanceRule(scheduleType);
+        const newStart = new Date(form.data + 'T00:00:00');
+        const newEnd = new Date(newStart);
+        newEnd.setDate(newStart.getDate() + 3);
+
+        return this.getStored().find(item => {
+            if (item.brand !== form.marca || item.seg !== form.seg) return false;
+            const existingRule = this.getBalanceRule(item.type);
+            if (existingRule === newRule && newRule !== 'mixed') return false;
+            const existingStart = new Date(item.start + 'T00:00:00');
+            const existingEnd = new Date((item.end || item.start) + 'T23:59:59');
+            return newStart <= existingEnd && newEnd >= existingStart;
+        }) || null;
+    },
+    openScheduleConflictModal: function(form, conflict) {
+        const modal = document.getElementById('scheduleConflictModal');
+        const requestedRule = this.getBalanceRule(this.getScheduledTestMap()[form.teste]);
+        const messages = {
+            zero: 'Este teste exige conta sem saldo, mas existe um teste com saldo agendado no mesmo período.',
+            funded: 'Este teste exige saldo disponível, mas existe um teste de saldo zerado ou saldo controlado agendado no mesmo período.',
+            mixed: 'Este teste exige saldo zerado até D+2 e crédito em D+3, mas existe outro agendamento que pode alterar esse saldo.'
+        };
+        document.getElementById('scheduleConflictMessage').textContent = messages[requestedRule];
+        const start = conflict.start.split('-').reverse().join('/');
+        const end = (conflict.end || conflict.start).split('-').reverse().join('/');
+        document.getElementById('scheduleConflictDetails').textContent = `${conflict.type} • ${conflict.brand} • ${conflict.seg} • ${start} até ${end}`;
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.firstElementChild.classList.remove('scale-95');
+        }, 10);
+    },
+    closeScheduleConflictModal: function() {
+        const modal = document.getElementById('scheduleConflictModal');
+        modal.classList.add('opacity-0');
+        modal.firstElementChild.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    },
+    openConflictingSchedule: function() {
+        this.closeScheduleConflictModal();
+        this.switchTab('agendamentos');
+    },
+    checkSync: function() { 
+        const f = { teste: document.getElementById('logTeste').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
+        const scheduledTestMap = this.getScheduledTestMap();
         const scheduleType = scheduledTestMap[f.teste];
         if (!scheduleType || !f.marca || !f.data || f.status !== 'OK') return;
+
+        const conflict = this.findScheduleConflict(f);
+        if (conflict) {
+            const conflictKey = `${f.teste}|${f.marca}|${f.seg}|${f.data}|${conflict.id}`;
+            if (this.lastScheduleConflictKey !== conflictKey) {
+                this.lastScheduleConflictKey = conflictKey;
+                this.openScheduleConflictModal(f, conflict);
+            }
+            return;
+        }
+        this.lastScheduleConflictKey = null;
 
         const existing = this.getStored().some(item =>
             item.brand === f.marca && item.seg === f.seg &&

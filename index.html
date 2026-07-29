@@ -28,7 +28,7 @@
     </script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css?v=20260729-4">
+    <link rel="stylesheet" href="style.css?v=20260729-5">
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors duration-300 selection:bg-primary-500 selection:text-white">
 
@@ -145,6 +145,26 @@
                 <button onclick="app.closeGuideModal()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">
                     Entendido
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scheduleConflictModal" class="fixed inset-0 z-[116] bg-slate-900/80 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-red-200 dark:border-red-500/30 transform transition-transform scale-95">
+            <div class="p-6 text-center">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
+                    <i data-lucide="shield-alert" size="28"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Execução bloqueada</h3>
+                <p id="scheduleConflictMessage" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></p>
+                <div class="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-left dark:border-red-500/20 dark:bg-red-500/10">
+                    <p class="text-sm font-semibold text-red-800 dark:text-red-300">Agendamento incompatível encontrado</p>
+                    <p id="scheduleConflictDetails" class="mt-1 text-xs text-red-700 dark:text-red-200"></p>
+                </div>
+            </div>
+            <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 sm:flex-row sm:justify-end dark:border-slate-700 dark:bg-slate-800 rounded-b-2xl">
+                <button onclick="app.closeScheduleConflictModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Fechar</button>
+                <button onclick="app.openConflictingSchedule()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">Ver agendamentos</button>
             </div>
         </div>
     </div>
@@ -529,8 +549,8 @@
 
     </main>
 
-    <script src="config.local.js?v=20260729-4" defer></script>
-    <script src="brand-mapping.js?v=20260729-4" defer></script>
-    <script src="script.js?v=20260729-4" defer></script>
+    <script src="config.local.js?v=20260729-5" defer></script>
+    <script src="brand-mapping.js?v=20260729-5" defer></script>
+    <script src="script.js?v=20260729-5" defer></script>
 </body>
 </html>

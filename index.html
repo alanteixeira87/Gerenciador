@@ -28,7 +28,7 @@
     </script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css?v=20260729-5">
+    <link rel="stylesheet" href="style.css?v=20260729-6">
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors duration-300 selection:bg-primary-500 selection:text-white">
 
@@ -175,10 +175,10 @@
                 <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
                     <i data-lucide="calendar-check-2" size="28"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Teste aprovado</h3>
+                <h3 id="approvedTestTitle" class="text-xl font-bold text-gray-900 dark:text-white">Teste aprovado</h3>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">O teste <strong id="approvedTestName" class="text-primary-600 dark:text-primary-400"></strong> foi marcado como OK.</p>
                 <div class="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-left dark:border-green-500/20 dark:bg-green-500/10">
-                    <p class="text-sm font-semibold text-green-800 dark:text-green-300">Agendamento criado automaticamente</p>
+                    <p id="approvedScheduleStatus" class="text-sm font-semibold text-green-800 dark:text-green-300">Agendamento criado automaticamente</p>
                     <p id="approvedScheduleDetails" class="mt-1 text-xs text-green-700 dark:text-green-200"></p>
                 </div>
             </div>
@@ -272,7 +272,15 @@
                     <button onclick="app.generateLog()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary-500/20 transition-all active:scale-95 flex items-center gap-2"><i data-lucide="wand-2" size="18"></i> Gerar Log</button>
                 </div>
                 <div class="p-8 grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste Realizado</label><input list="listTestes" id="logTeste" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" oninput="app.checkSync()"><datalist id="listTestes"></datalist></div>
+                    <div class="md:col-span-6 space-y-2">
+                        <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Teste Realizado / Plano Principal</label>
+                        <input list="listTestes" id="logTeste" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" oninput="app.updateLongDurationTestSelect()">
+                        <datalist id="listTestes"></datalist>
+                        <div id="longDurationTestField" class="hidden pt-2 space-y-2">
+                            <label for="longDurationTestSelect" class="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Teste relacionado ao plano</label>
+                            <select id="longDurationTestSelect" onchange="app.checkSync()" class="w-full px-4 py-3 bg-primary-50 dark:bg-slate-900 border border-primary-200 dark:border-primary-500/30 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white"></select>
+                        </div>
+                    </div>
                     <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">SO</label><select id="logSO" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white"><option>Android</option><option>iOS</option><option>Desktop</option></select></div>
                     <div class="md:col-span-3 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</label><input type="date" id="logData" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white dark:[color-scheme:dark]" onchange="app.checkSync()"></div>
                     <div class="md:col-span-6 space-y-2"><label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marca</label><input list="listMarcas" id="logMarca" class="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/50 outline-none dark:text-white" oninput="app.syncEvidences(); app.checkSync()"><datalist id="listMarcas"></datalist></div>
@@ -549,8 +557,8 @@
 
     </main>
 
-    <script src="config.local.js?v=20260729-5" defer></script>
-    <script src="brand-mapping.js?v=20260729-5" defer></script>
-    <script src="script.js?v=20260729-5" defer></script>
+    <script src="config.local.js?v=20260729-6" defer></script>
+    <script src="brand-mapping.js?v=20260729-6" defer></script>
+    <script src="script.js?v=20260729-6" defer></script>
 </body>
 </html>

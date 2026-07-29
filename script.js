@@ -2,6 +2,8 @@
     marcas: ["ABC","Accreditto","Ailos","Ame Digital","Asaas","Azimut","Banco do Brasil","Banco do Nordeste","Banrisul","Bari","BMG","Bradesco","BRB","BTG Banking","BV","C6","Caixa","Celcoin","Cielo","Cora","Digio","Efí","Genial","Geru","Getnet","Hyundai","Infinite Pay","Inter","Itaú","Iti","Iugu","Listo","Master","Mei Fácil","Mercado Pago","Mercantil","Midway","Modal","Méliuz","Neon","Next","Nubank","Original","PagBank","Pan","Pic Pay","PlayersBank","Quero Quero Pag","Randon","RecargaPay","Rico","Safra","Santander","Sicoob","Sicredi","Sofisa","Stone","Super Digital","Uber Conta","Up.P","Volvo","WillBank","XP","Ágora Investimentos","Íon","BTG Investimentos","Santander Cartões","Santander Financiamentos","Santander Crédito Imob","Empréstimo Sim","Santander Corretora","Bradescard","Investimentos BB","Toro","Ourocard","BTG Empresas","Iniciador.com","Google Pay","Lina Openx","Banco Industrial","Pernambucanas","Rede","Porto Bank","WHG","MagaluPay","Monte Bravo","Klavi","Mobilize Financial","CrediNissan","Belvo","Àgora Investimento","Crefisa"],
     testes: [
         "JO Automatic Pix","JO Payments","JO Sweeping Payments Balances","JO Sweeping Revoked Consent","JO Sweeping Revoked Recurring","JO Sweeping Invalid Par","JO Sweeping Invalid Request","JO Enrollments Balances","JO Enrollments Revoked Consent","JO Enrollments Revoked Enrollment","JO Enrollments Invalid Request","JO Enrollments Invalid Par","Customer Data Happy Path", "Pix Scheduling 1-2", "JSR Pix Verification 1-2", "Pix Retry 1-3", "Consents V3", "Accounts V3", "Debtor V4", "Not Cancelled V4", "Resources", "Unique", "Custom Core V4", "Real Email Invalid V4", "Fake Email Proxy V4", "SWP Total Allowed", "SWP Accounts Core", "Payments Core V2.2", "Invalid Challenge V2.2", "Invalid Origin V2.2", "Invalid Public Key V2.2", "Invalid RPID V2.2", "Pre-Enrollment V2.2", "Invalid Status V2.2", "Keys Swap V2.2", "Unmatching Fields V2.2", "APX Semanal", "APX Scheduled", "Authorised Executed", "Limits Negative", "Limits", "Not Authorised",
+        "Automatic Payments API v2.2 - Scheduling", "Enrollments API v2.2 - Automatic Pix Scheduling",
+        "Enrollments API v2.2 - Payments Scheduling", "Payments API v4 - Scheduling", "Payments API v5 - Scheduling",
         "Pix Verification 1-2", "JSR Pix Schedulling 1-2", "Pix Successful Retry 1-3",
         "JSR Automatic Pix Scheduling 1-2", "Payments v4 Pix Verification 1-2", "Payments v5 Pix Verification 1-2",
     ]
@@ -314,7 +316,7 @@ const app = {
         setTimeout(() => t.classList.add('translate-x-[120%]', 'opacity-0'), 3500);
     },
     generateLog: function() {
-        const f = { teste: document.getElementById('logTeste').value, so: document.getElementById('logSO').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
+        const f = { teste: this.getSelectedLogTest(), so: document.getElementById('logSO').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         if(!f.teste || !f.marca) { this.showToast("Preencha Marca e Teste!", "error"); return; }
         const conflict = this.findScheduleConflict(f);
         if (conflict) {
@@ -339,6 +341,42 @@ const app = {
         const el = document.getElementById(id);
         const txt = el.value !== undefined ? el.value : el.textContent;
         navigator.clipboard.writeText(txt).then(() => this.showToast('Copiado para a área de transferência!'));
+    },
+    getLongDurationPlans: function() {
+        return {
+            "Automatic Payments API v2.2 - Scheduling": [
+                "Pix Scheduling 1-2", "Pix Retry 1-3", "Pix Successful Retry 1-3"
+            ],
+            "Enrollments API v2.2 - Automatic Pix Scheduling": ["JSR Automatic Pix Scheduling 1-2"],
+            "Enrollments API v2.2 - Payments Scheduling": ["JSR Pix Verification 1-2"],
+            "Payments API v4 - Scheduling": ["Payments v4 Pix Verification 1-2"],
+            "Payments API v5 - Scheduling": ["Payments v5 Pix Verification 1-2"],
+            "JSR Pix Schedulling 1-2": ["JSR Automatic Pix Scheduling 1-2"]
+        };
+    },
+    updateLongDurationTestSelect: function() {
+        const plan = document.getElementById('logTeste').value;
+        const options = this.getLongDurationPlans()[plan];
+        const field = document.getElementById('longDurationTestField');
+        const select = document.getElementById('longDurationTestSelect');
+        field.classList.toggle('hidden', !options);
+        select.innerHTML = '<option value="" disabled selected>Selecione o teste do escopo...</option>';
+        if (options) {
+            options.forEach(test => {
+                const option = document.createElement('option');
+                option.value = test;
+                option.textContent = test;
+                select.appendChild(option);
+            });
+        }
+        this.checkSync();
+    },
+    getSelectedLogTest: function() {
+        const field = document.getElementById('longDurationTestField');
+        if (field && !field.classList.contains('hidden')) {
+            return document.getElementById('longDurationTestSelect').value;
+        }
+        return document.getElementById('logTeste').value;
     },
     getScheduledTestMap: function() {
         return {
@@ -375,6 +413,21 @@ const app = {
             return newStart <= existingEnd && newEnd >= existingStart;
         }) || null;
     },
+    findCompatibleSchedule: function(form) {
+        const scheduleType = this.getScheduledTestMap()[form.teste];
+        if (!scheduleType || !form.marca || !form.data) return null;
+        const newRule = this.getBalanceRule(scheduleType);
+        const newStart = new Date(form.data + 'T00:00:00');
+        const newEnd = new Date(newStart);
+        newEnd.setDate(newStart.getDate() + 3);
+        return this.getStored().find(item => {
+            if (item.brand !== form.marca || item.seg !== form.seg) return false;
+            if (this.getBalanceRule(item.type) !== newRule || newRule === 'mixed') return false;
+            const existingStart = new Date(item.start + 'T00:00:00');
+            const existingEnd = new Date((item.end || item.start) + 'T23:59:59');
+            return newStart <= existingEnd && newEnd >= existingStart;
+        }) || null;
+    },
     openScheduleConflictModal: function(form, conflict) {
         const modal = document.getElementById('scheduleConflictModal');
         const requestedRule = this.getBalanceRule(this.getScheduledTestMap()[form.teste]);
@@ -404,7 +457,7 @@ const app = {
         this.switchTab('agendamentos');
     },
     checkSync: function() {
-        const f = { teste: document.getElementById('logTeste').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
+        const f = { teste: this.getSelectedLogTest(), marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         const scheduledTestMap = this.getScheduledTestMap();
         const scheduleType = scheduledTestMap[f.teste];
         if (!scheduleType || !f.marca || !f.data || f.status !== 'OK') return;
@@ -420,11 +473,18 @@ const app = {
         }
         this.lastScheduleConflictKey = null;
 
-        const existing = this.getStored().some(item =>
+        const existing = this.getStored().find(item =>
             item.brand === f.marca && item.seg === f.seg &&
             item.type === scheduleType && item.start === f.data
         );
-        if (existing) return;
+        if (existing) {
+            const existingKey = `existing|${existing.id}`;
+            if (this.lastCompatibleScheduleKey !== existingKey) {
+                this.lastCompatibleScheduleKey = existingKey;
+                this.openApprovedTestModal(existing, { existing: true });
+            }
+            return;
+        }
 
         document.getElementById('agendaMarca').value = f.marca;
         document.getElementById('agendaSegmento').value = f.seg;
@@ -432,6 +492,7 @@ const app = {
         document.getElementById('agendaInicio').value = f.data;
         this.calculateAgenda();
 
+        const compatible = this.findCompatibleSchedule(f);
         const schedule = {
             id: Date.now(), brand: f.marca, seg: f.seg, type: scheduleType, start: f.data,
             end: document.getElementById('agendaFim').value,
@@ -441,11 +502,17 @@ const app = {
         data.push(schedule);
         localStorage.setItem('qa_scheduler_v2', JSON.stringify(data));
         this.renderTable();
-        this.openApprovedTestModal(schedule);
+        this.openApprovedTestModal(schedule, { compatible });
     },
-    openApprovedTestModal: function(schedule) {
+    openApprovedTestModal: function(schedule, context = {}) {
         const modal = document.getElementById('approvedTestModal');
+        document.getElementById('approvedTestTitle').textContent = context.existing ? 'Teste compatível' : 'Teste aprovado';
         document.getElementById('approvedTestName').textContent = schedule.type;
+        document.getElementById('approvedScheduleStatus').textContent = context.existing
+            ? 'Este teste já possui um agendamento compatível'
+            : context.compatible
+                ? `Novo agendamento compatível com ${context.compatible.type}`
+                : 'Agendamento criado automaticamente';
         const start = schedule.start.split('-').reverse().join('/');
         const end = schedule.end.split('-').reverse().join('/');
         document.getElementById('approvedScheduleDetails').textContent = `${schedule.brand} • ${schedule.seg} • ${start} até ${end}`;

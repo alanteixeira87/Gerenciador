@@ -60,6 +60,74 @@ body {
 .test-status-restricted span { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.14); }
 .dark .test-status-chip { color: #cbd5e1; }
 
+.guide-card {
+    padding: 1rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.75rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.875rem;
+}
+.guide-card h4 {
+    margin-bottom: 0.5rem;
+    color: #1e40af;
+    font-weight: 700;
+}
+.guide-card p + p { margin-top: 0.5rem; }
+.guide-id {
+    overflow-wrap: anywhere;
+    color: #64748b;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+}
+.dark .guide-card {
+    border-color: rgba(59, 130, 246, 0.25);
+    background: rgba(59, 130, 246, 0.1);
+    color: #bfdbfe;
+}
+.dark .guide-card h4 { color: #93c5fd; }
+.dark .guide-id { color: #94a3b8; }
+
+.guide-button-available {
+    border-color: #f59e0b !important;
+}
+.guide-button-pulse {
+    animation: guideAttention 0.7s ease-in-out 6;
+}
+@keyframes guideAttention {
+    0%, 100% {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        transform: scale(1);
+    }
+    50% {
+        background-color: #fef3c7;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.22);
+        transform: scale(1.015);
+    }
+}
+.dark .guide-button-pulse {
+    animation-name: guideAttentionDark;
+}
+@keyframes guideAttentionDark {
+    0%, 100% {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        transform: scale(1);
+    }
+    50% {
+        background-color: rgba(245, 158, 11, 0.2);
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.18);
+        transform: scale(1.015);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .guide-button-pulse {
+        animation: none;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    }
+}
+
 /* Fundo desfocado */
 .blur-bg { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 

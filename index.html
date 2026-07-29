@@ -62,85 +62,69 @@
                     <i data-lucide="x" size="24"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
+            <div id="guideModalContent" class="p-6 overflow-y-auto custom-scrollbar space-y-6">
                 
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Siga as diretrizes abaixo para a execução correta dos testes <span class="font-bold text-primary-600 dark:text-primary-400">JSR / No Redirect</span>.
+                    Orientações pertinentes ao teste selecionado: <span id="guideSelectedTest" class="font-bold text-primary-600 dark:text-primary-400"></span>.
                 </p>
-                <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4">
-                    <h4 class="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 text-sm mb-2">
-                        <i data-lucide="coins" size="16"></i> Pix-Schedulling 1-2 e Pix-Verification 1-2
-                    </h4>
-                    <ul class="text-sm text-blue-700 dark:text-blue-200 space-y-2 list-disc list-inside">
-                        <li>Saldo exigido: <strong>R$ 10,00.</strong> </li>
-                        <li><strong>Atenção:</strong> Para esses dois testes é necessário deixar um saldo um pouco acima do mínimo.  <strong>Se lembre de incluir um print do saldo em conta mesmo em caso de Ok, na execução do teste para não haver contestações por falta de saldo</strong> e retrabalho.</li>
-                    </ul>
-                </div>
-
-                <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4">
-                    <h4 class="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 text-sm mb-2">
-                        <i data-lucide="coins" size="16"></i> Gestão de Saldo
-                    </h4>
-                    <ul class="text-sm text-blue-700 dark:text-blue-200 space-y-2 list-disc list-inside">
-                        <li>Saldo mínimo exigido: <strong>R$ 2,00</strong> por teste executado.</li>
-                        <li><strong>Atenção:</strong> Após cada teste, verifique se o saldo foi debitado da conta. Em caso positivo, é <strong>obrigatório completar o saldo mínimo</strong> antes de seguir para os próximos testes, evitando falsos erros por falta de saldo e retrabalho.</li>
-                    </ul>
-                </div>
-
-                <div class="bg-gray-100 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h4 class="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 text-sm">
-                            <i data-lucide="smartphone" size="16"></i> Configurações no Dispositivo Mobile
-                        </h4>
-                        <button onclick="app.openImageModal()" class="px-3 py-1.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
-                            <i data-lucide="image" size="14"></i> Visualizar Exemplo
-                        </button>
+                <div data-guide-tests="scheduling" class="guide-section space-y-4">
+                    <div class="guide-card">
+                        <h4>Automatic Pix Scheduling</h4>
+                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling_1-2_test-module_v2-2</p>
+                        <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
+                        <p>O saldo total deve estar disponível antes do início e permanecer na conta durante os três dias. A insuficiência em qualquer etapa poderá causar falha operacional.</p>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
-                            <span class="block text-xs text-gray-500 dark:text-gray-400">Prazo do Consentimento</span>
-                            <span class="font-semibold text-sm dark:text-white">Indeterminado</span>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
-                            <span class="block text-xs text-gray-500 dark:text-gray-400">Máx. por Transação</span>
-                            <span class="font-semibold text-sm dark:text-white">R$ 1,00</span>
-                        </div>
-                        <div class="bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
-                            <span class="block text-xs text-gray-500 dark:text-gray-400">Valor Máximo Diário</span>
-                            <span class="font-semibold text-sm dark:text-white">R$ 1,00</span>
-                        </div>
+                    <div class="guide-card">
+                        <h4>Automatic Pix Scheduling Retry</h4>
+                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-retry_1-3_test-module_v2-2</p>
+                        <p><strong>Saldo necessário: R$ 0,00.</strong> A conta deve permanecer sem saldo de D+0 até D+3.</p>
+                        <p>O teste valida tentativas de cobrança sem saldo. Qualquer crédito durante o período poderá alterar o comportamento esperado e ocasionar falha operacional.</p>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-2">
-                        <i data-lucide="info" size="14"></i> Nota: Cada marca possui sua regra de negócio para nomenclatura; não devemos interferir neste ponto.
-                    </p>
+                    <div class="guide-card">
+                        <h4>Automatic Pix Scheduling Successful Retry</h4>
+                        <p class="guide-id">automatic-payments_api_automatic-pix-scheduling-successful-retry_1-3_test-module_v2-2</p>
+                        <p><strong>Saldo inicial: R$ 0,00.</strong> Disponibilizar R$ 1,00 antes da tentativa de D+3.</p>
+                        <p>A conta deve permanecer sem saldo nas primeiras tentativas. O crédito de R$ 1,00 deve ser agendado previamente por outra instituição e a evidência do agendamento deve acompanhar o log.</p>
+                    </div>
                 </div>
 
-                <div class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4">
-                    <h4 class="font-bold text-red-800 dark:text-red-300 flex items-center gap-2 text-sm mb-3">
-                        <i data-lucide="alert-triangle" size="16"></i> Pontos Críticos
-                    </h4>
-                    <ul class="text-sm text-red-700 dark:text-red-200 space-y-3 list-disc list-inside">
-                        <li>
-                            Caso a marca <strong>não possua</strong> a opção de tempo "Indeterminado" dentro do prazo estipulado, <strong>o teste deve ser interrompido imediatamente</strong>. Colete as devidas evidências (print da tela mostrando a ausência da opção no select correspondente).
-                        </li>
-                        <li>
-                            <strong>Validação Obrigatória:</strong> Em algumas marcas, o campo prazo vem preenchido por default como "Indeterminado". É <strong>obrigatório</strong> que o QA abra o dropdown e valide se realmente está configurado corretamente, pois algumas marcas "consideram o prazo de 5 anos" como indeterminado.
-                        </li>
-                    </ul>
+                <div data-guide-tests="no_redirect_auto_sched_novo" class="guide-section guide-card">
+                    <h4>Enrollments — Automatic Payments — Automatic Pix Scheduling</h4>
+                    <p class="guide-id">enrollments_api_automatic-payments_automatic-pix-scheduling_1-2_test-module_v2-2</p>
+                    <p><strong>Saldo mínimo: R$ 2,00.</strong> Débitos previstos: D+0 R$ 1,00; D+1 R$ 0,00; D+2 R$ 1,00; D+3 R$ 0,00.</p>
+                    <p>O valor total deve estar disponível para as cobranças de D+0 e D+2. Quando houver crédito por outra instituição, faça o agendamento antecipadamente e anexe sua evidência ao log.</p>
                 </div>
 
-                <div class="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-xl p-4">
+                <div data-guide-tests="no_redirect_sched_novo" class="guide-section guide-card">
+                    <h4>Enrollments — Payments — Scheduled Pix Verification</h4>
+                    <p class="guide-id">enrollments_api_payments_scheduled-pix-verification_1-2_test-module_v4</p>
+                    <p><strong>Saldo mínimo: R$ 2,00.</strong> Débitos previstos: D+0 R$ 1,00; D+1 R$ 0,00; D+2 R$ 1,00; D+3 R$ 0,00.</p>
+                    <p>O valor total deve estar disponível para as cobranças de D+0 e D+2. Quando houver crédito por outra instituição, realize o agendamento antecipadamente e anexe a evidência ao log.</p>
+                </div>
+
+                <div data-guide-tests="payments_v4_scheduling" class="guide-section guide-card">
+                    <h4>Payments API v4.0.1 — Scheduled Pix Verification</h4>
+                    <p class="guide-id">payments_api_scheduled-pix-verification_1-2_test-module_v4</p>
+                    <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
+                    <p>O saldo total deve estar disponível antes do início e ser suficiente durante todo o período. Valor inferior ao necessário poderá ocasionar falha operacional.</p>
+                </div>
+
+                <div data-guide-tests="payments_v5_scheduling" class="guide-section guide-card">
+                    <h4>Payments API v5.0.1 — Scheduled Pix Verification</h4>
+                    <p class="guide-id">payments_api_scheduled-pix-verification_1-2_test-module_v5</p>
+                    <p><strong>Saldo mínimo: R$ 5,00.</strong> Débitos previstos: D+0 R$ 2,00; D+1 R$ 2,00; D+2 R$ 1,00.</p>
+                    <p>O saldo total deve estar disponível antes do início e ser suficiente durante todo o período de validação. Valor inferior ao necessário poderá ocasionar falha operacional.</p>
+                </div>
+
+                <div id="guideGlobalNote" class="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-xl p-4">
                     <h4 class="font-bold text-orange-800 dark:text-orange-300 flex items-center gap-2 text-sm mb-2">
-                        <i data-lucide="shield-alert" size="16"></i> Mitigação de Falsos Negativos
+                        <i data-lucide="clipboard-check" size="16"></i> Observação geral sobre as evidências
                     </h4>
-                    <p class="text-sm text-orange-700 dark:text-orange-200">
-                        Antes de realizar o teste, entre na conta pertinente e <strong>verifique se a mesma está configurada corretamente como PF ou PJ</strong>. Foi observado que algumas marcas alternam as contas dentro do mesmo aplicativo, o que pode gerar falhas inesperadas na jornada.
-                    </p>
-                </div>
-
-                <div class="mt-4 p-3 bg-gray-100 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 text-center">
-                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Lembrando: caso seja necessário qualquer implementação, ajuste ou ajuda, basta entrar em contato.</p>
+                    <ul class="text-sm text-orange-700 dark:text-orange-200 space-y-2 list-disc list-inside">
+                        <li>Anexe, quando aplicável: print do saldo disponível, print da conta sem saldo, comprovante do agendamento e print da versão do aplicativo.</li>
+                        <li>Capture as evidências com diferença máxima de uma hora em relação ao horário do log.</li>
+                        <li>Registre o saldo antes e depois da execução e verifique-o entre as tentativas, pois o débito pode ocorrer mesmo quando o teste apresenta erro.</li>
+                    </ul>
                 </div>
 
             </div>
@@ -416,7 +400,7 @@
                                     </div>
                                     <div class="test-select-wrap">
                                         <i data-lucide="list-filter" size="17" class="test-select-icon"></i>
-                                        <select id="chi_select_test" class="test-selector w-full py-3 pr-10 bg-white dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer truncate">
+                                        <select id="chi_select_test" onchange="app.onTestGuideChange()" class="test-selector w-full py-3 pr-10 bg-white dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer truncate">
                                             <optgroup label="OPEN FVP">
                                                 <option value="payments">Automatic Payments API - v2.2.0 - Automatic Pix - Open FVP</option>
                                                 <option value="sweeping">Automatic Payments API - v2.2.0 - Sweeping - Open FVP</option>
@@ -469,7 +453,7 @@
                                 <button onclick="chicago.generateFromSelect()" class="flex-1 px-4 py-3 bg-gray-900 hover:bg-black dark:bg-primary-600 dark:hover:bg-primary-500 text-white text-sm font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
                                     <i data-lucide="zap" size="18"></i> Gerar JSON
                                 </button>
-                                <button onclick="app.openGuideModal()" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-slate-600 text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
+                                <button id="testGuideButton" onclick="app.openGuideModal()" class="flex-1 px-4 py-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-slate-600 text-sm font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2">
                                     <i data-lucide="book-open" size="18"></i> Orientações de Execução
                                 </button>
                             </div>

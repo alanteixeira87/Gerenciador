@@ -83,9 +83,14 @@ const app = {
         this.switchTab('chicago'); 
         chicago.loadSession();
         chicago.toggleSdTicket();
+        this.updateTestGuide(false);
     },
 
     openGuideModal: function() {
+        if (!this.updateTestGuide(false)) {
+            this.showToast("Não há orientação específica para o teste selecionado.", "error");
+            return;
+        }
         const m = document.getElementById('guideModal');
         m.classList.remove('hidden');
         setTimeout(() => { 
@@ -93,6 +98,48 @@ const app = {
             m.querySelector('div').classList.remove('scale-95'); 
             m.querySelector('div').classList.add('scale-100'); 
         }, 10);
+    },
+
+    updateTestGuide: function(shouldHighlight = true) {
+        const select = document.getElementById('chi_select_test');
+        const button = document.getElementById('testGuideButton');
+        if (!select || !button) return false;
+
+        const testValue = select.value;
+        const testLabel = select.options[select.selectedIndex]?.textContent.trim() || "";
+        const sections = [...document.querySelectorAll('.guide-section[data-guide-tests]')];
+        let visibleSections = 0;
+
+        sections.forEach(section => {
+            const supportedTests = section.dataset.guideTests.split(',').map(item => item.trim());
+            const isRelevant = supportedTests.includes(testValue);
+            section.classList.toggle('hidden', !isRelevant);
+            if (isRelevant) visibleSections++;
+        });
+
+        const selectedTest = document.getElementById('guideSelectedTest');
+        if (selectedTest) selectedTest.textContent = testLabel;
+
+        const hasGuide = visibleSections > 0;
+        button.classList.toggle('guide-button-available', hasGuide);
+        button.setAttribute('aria-label', hasGuide
+            ? `Há orientações de execução para ${testLabel}`
+            : `Não há orientações específicas para ${testLabel}`);
+
+        button.classList.remove('guide-button-pulse');
+        if (hasGuide && shouldHighlight) {
+            void button.offsetWidth;
+            button.classList.add('guide-button-pulse');
+            clearTimeout(this.guidePulseTimer);
+            this.guidePulseTimer = setTimeout(() => {
+                button.classList.remove('guide-button-pulse');
+            }, 4200);
+        }
+        return hasGuide;
+    },
+
+    onTestGuideChange: function() {
+        this.updateTestGuide(true);
     },
 
     closeGuideModal: function() {

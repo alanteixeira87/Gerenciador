@@ -87,6 +87,7 @@ const app = {
         chicago.loadSession();
         chicago.toggleSdTicket();
         this.updateTestGuide(false);
+        this.updatePayloadLongDurationSelect();
     },
 
     openGuideModal: function() {
@@ -163,6 +164,73 @@ const app = {
 
     onTestGuideChange: function() {
         this.updateTestGuide(true);
+        this.updatePayloadLongDurationSelect();
+    },
+
+    getPayloadLongDurationTests: function() {
+        return {
+            scheduling: ["Pix Scheduling 1-2", "Pix Retry 1-3", "Pix Successful Retry 1-3"],
+            no_redirect_auto_sched_novo: ["JSR Automatic Pix Scheduling 1-2"],
+            no_redirect_sched_novo: ["JSR Pix Verification 1-2"],
+            payments_v4_scheduling: ["Payments v4 Pix Verification 1-2"],
+            payments_v5_scheduling: ["Payments v5 Pix Verification 1-2"]
+        };
+    },
+
+    updatePayloadLongDurationSelect: function() {
+        const plan = document.getElementById('chi_select_test')?.value;
+        const tests = this.getPayloadLongDurationTests()[plan];
+        const field = document.getElementById('payloadRelatedTestField');
+        const grid = document.getElementById('payloadTestSelectors');
+        const select = document.getElementById('payloadRelatedTestSelect');
+        if (!field || !grid || !select) return;
+
+        field.classList.toggle('hidden', !tests);
+        grid.classList.toggle('md:grid-cols-2', Boolean(tests));
+        select.innerHTML = '<option value="" disabled selected>Selecione o teste relacionado...</option>';
+        if (tests) {
+            tests.forEach(test => {
+                const option = document.createElement('option');
+                option.value = test;
+                option.textContent = test;
+                select.appendChild(option);
+            });
+        }
+    },
+
+    validatePayloadScheduledTest: function(requireSelection = false) {
+        const field = document.getElementById('payloadRelatedTestField');
+        if (!field || field.classList.contains('hidden')) return true;
+        const test = document.getElementById('payloadRelatedTestSelect').value;
+        if (!test) {
+            if (requireSelection) this.showToast('Selecione o teste relacionado ao plano.', 'error');
+            return false;
+        }
+        const now = new Date();
+        const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        const form = {
+            teste: test,
+            marca: document.getElementById('chi_brand').value,
+            seg: document.getElementById('chi_select_segment').value.toUpperCase(),
+            status: 'OK',
+            data: localDate
+        };
+        if (!form.marca) {
+            if (requireSelection) this.showToast('Selecione a instituição antes de validar o teste.', 'error');
+            return !requireSelection;
+        }
+        const conflict = this.findScheduleConflict(form);
+        if (conflict) {
+            this.openScheduleConflictModal(form, conflict);
+            return false;
+        }
+        const compatible = this.findCompatibleSchedule(form);
+        if (compatible) {
+            this.openApprovedTestModal(compatible, { existing: true, requestedTest: test });
+        } else {
+            this.showToast('Teste liberado: nenhum agendamento incompatível encontrado.');
+        }
+        return true;
     },
 
     closeGuideModal: function() {
@@ -507,7 +575,7 @@ const app = {
     openApprovedTestModal: function(schedule, context = {}) {
         const modal = document.getElementById('approvedTestModal');
         document.getElementById('approvedTestTitle').textContent = context.existing ? 'Teste compatível' : 'Teste aprovado';
-        document.getElementById('approvedTestName').textContent = schedule.type;
+        document.getElementById('approvedTestName').textContent = context.requestedTest || schedule.type;
         document.getElementById('approvedScheduleStatus').textContent = context.existing
             ? 'Este teste já possui um agendamento compatível'
             : context.compatible
@@ -851,6 +919,7 @@ const chicago = {
     },
 
     generateFromSelect: function() {
+        if (!app.validatePayloadScheduledTest(true)) return;
         const segment = document.getElementById('chi_select_segment').value; 
         const test = document.getElementById('chi_select_test').value; 
         const typeToGenerate = `${test}_${segment}`; 

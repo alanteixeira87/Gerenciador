@@ -28,7 +28,7 @@
     </script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css?v=20260729-6">
+    <link rel="stylesheet" href="style.css?v=20260729-7">
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors duration-300 selection:bg-primary-500 selection:text-white">
 
@@ -459,9 +459,10 @@
                                             <span class="test-status-chip test-status-restricted"><span></span>Restricted</span>
                                         </div>
                                     </div>
-                                    <div class="test-select-wrap">
-                                        <i data-lucide="list-filter" size="17" class="test-select-icon"></i>
-                                        <select id="chi_select_test" onchange="app.onTestGuideChange()" class="test-selector w-full py-3 pr-10 bg-white dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer truncate">
+                                    <div id="payloadTestSelectors" class="grid grid-cols-1 gap-3">
+                                        <div class="test-select-wrap">
+                                            <i data-lucide="list-filter" size="17" class="test-select-icon"></i>
+                                            <select id="chi_select_test" onchange="app.onTestGuideChange()" class="test-selector w-full py-3 pr-10 bg-white dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer truncate">
                                             <optgroup label="OPEN FVP">
                                                 <option value="payments">Automatic Payments API - v2.2.0 - Automatic Pix - Open FVP</option>
                                                 <option value="sweeping">Automatic Payments API - v2.2.0 - Sweeping - Open FVP</option>
@@ -481,7 +482,13 @@
                                                 <option value="payments_v4_scheduling">Payments API - v4.0.1 - Scheduling - Restricted FVP</option>
                                                 <option value="payments_v5_scheduling">Payments API - v5.0.1 - Scheduling - Restricted FVP</option>
                                             </optgroup>
-                                        </select>
+                                            </select>
+                                        </div>
+                                        <div id="payloadRelatedTestField" class="hidden">
+                                            <select id="payloadRelatedTestSelect" onchange="app.validatePayloadScheduledTest()" class="test-selector w-full px-3 py-3 bg-primary-50 dark:bg-slate-900 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none cursor-pointer border-primary-300 dark:border-primary-500/40">
+                                                <option value="" disabled selected>Selecione o teste relacionado...</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -557,8 +564,8 @@
 
     </main>
 
-    <script src="config.local.js?v=20260729-6" defer></script>
-    <script src="brand-mapping.js?v=20260729-6" defer></script>
-    <script src="script.js?v=20260729-6" defer></script>
+    <script src="config.local.js?v=20260729-7" defer></script>
+    <script src="brand-mapping.js?v=20260729-7" defer></script>
+    <script src="script.js?v=20260729-7" defer></script>
 </body>
 </html>

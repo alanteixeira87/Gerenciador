@@ -337,14 +337,52 @@ const app = {
     checkSync: function() { 
         const f = { teste: document.getElementById('logTeste').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         const triggers = ["Pix Scheduling 1-2", "JSR Pix Verification 1-2", "Pix Retry 1-3"];
-        if (triggers.includes(f.teste) && f.marca && f.status === 'OK') {
-            document.getElementById('agendaMarca').value = f.marca;
-            document.getElementById('agendaSegmento').value = f.seg;
-            document.getElementById('agendaTipo').value = f.teste;
-            if(f.data) document.getElementById('agendaInicio').value = f.data;
-            this.showToast('Sincronizado!');
-            this.calculateAgenda();
-        }
+        if (!triggers.includes(f.teste) || !f.marca || !f.data || f.status !== 'OK') return;
+
+        const existing = this.getStored().some(item =>
+            item.brand === f.marca && item.seg === f.seg &&
+            item.type === f.teste && item.start === f.data
+        );
+        if (existing) return;
+
+        document.getElementById('agendaMarca').value = f.marca;
+        document.getElementById('agendaSegmento').value = f.seg;
+        document.getElementById('agendaTipo').value = f.teste;
+        document.getElementById('agendaInicio').value = f.data;
+        this.calculateAgenda();
+
+        const schedule = {
+            id: Date.now(), brand: f.marca, seg: f.seg, type: f.teste, start: f.data,
+            end: document.getElementById('agendaFim').value,
+            desc: document.getElementById('agendaInstrucoes').value
+        };
+        const data = this.getStored();
+        data.push(schedule);
+        localStorage.setItem('qa_scheduler_v2', JSON.stringify(data));
+        this.renderTable();
+        this.openApprovedTestModal(schedule);
+    },
+    openApprovedTestModal: function(schedule) {
+        const modal = document.getElementById('approvedTestModal');
+        document.getElementById('approvedTestName').textContent = schedule.type;
+        const start = schedule.start.split('-').reverse().join('/');
+        const end = schedule.end.split('-').reverse().join('/');
+        document.getElementById('approvedScheduleDetails').textContent = `${schedule.brand} • ${schedule.seg} • ${start} até ${end}`;
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.firstElementChild.classList.remove('scale-95');
+        }, 10);
+    },
+    closeApprovedTestModal: function() {
+        const modal = document.getElementById('approvedTestModal');
+        modal.classList.add('opacity-0');
+        modal.firstElementChild.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    },
+    openApprovedSchedule: function() {
+        this.closeApprovedTestModal();
+        this.switchTab('agendamentos');
     },
     calculateAgenda: function() { 
         const type = document.getElementById('agendaTipo').value;

@@ -28,7 +28,7 @@
     </script>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css?v=20260729-2">
+    <link rel="stylesheet" href="style.css?v=20260729-3">
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 h-screen flex overflow-hidden transition-colors duration-300 selection:bg-primary-500 selection:text-white">
 
@@ -145,6 +145,26 @@
                 <button onclick="app.closeGuideModal()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">
                     Entendido
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="approvedTestModal" class="fixed inset-0 z-[115] bg-slate-900/80 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-slate-700 transform transition-transform scale-95">
+            <div class="p-6 text-center">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400">
+                    <i data-lucide="calendar-check-2" size="28"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Teste aprovado</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">O teste <strong id="approvedTestName" class="text-primary-600 dark:text-primary-400"></strong> foi marcado como OK.</p>
+                <div class="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-left dark:border-green-500/20 dark:bg-green-500/10">
+                    <p class="text-sm font-semibold text-green-800 dark:text-green-300">Agendamento criado automaticamente</p>
+                    <p id="approvedScheduleDetails" class="mt-1 text-xs text-green-700 dark:text-green-200"></p>
+                </div>
+            </div>
+            <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 sm:flex-row sm:justify-end dark:border-slate-700 dark:bg-slate-800 rounded-b-2xl">
+                <button onclick="app.closeApprovedTestModal()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Continuar preenchendo</button>
+                <button onclick="app.openApprovedSchedule()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">Ver agendamento</button>
             </div>
         </div>
     </div>
@@ -509,8 +529,8 @@
 
     </main>
 
-    <script src="config.local.js?v=20260729-2" defer></script>
-    <script src="brand-mapping.js?v=20260729-2" defer></script>
-    <script src="script.js?v=20260729-2" defer></script>
+    <script src="config.local.js?v=20260729-3" defer></script>
+    <script src="brand-mapping.js?v=20260729-3" defer></script>
+    <script src="script.js?v=20260729-3" defer></script>
 </body>
 </html>

@@ -73,7 +73,6 @@ const app = {
         if(document.getElementById('logData')) document.getElementById('logData').valueAsDate = new Date();
         this.renderTable();
         this.setupListeners();
-        this.setupSearchableSelects();
         lucide.createIcons();
         this.syncEvidences();
         this.updateErrorReport();
@@ -349,110 +348,6 @@ const app = {
         }
     },
 
-    normalizeSearchText: function(value) {
-        return String(value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLocaleLowerCase('pt-BR')
-            .trim();
-    },
-
-    setupSearchableSelects: function() {
-        [
-            'chi_select_test',
-            'payloadRelatedTestSelect',
-            'agendaTipo',
-            'longDurationTestSelect'
-        ].forEach(id => this.makeSelectSearchable(id));
-    },
-
-    makeSelectSearchable: function(selectId) {
-        const select = document.getElementById(selectId);
-        if (!select || select.dataset.searchReady === 'true') return;
-
-        const input = document.createElement('input');
-        const list = document.createElement('datalist');
-        const listId = `${selectId}_search_list`;
-        input.type = 'search';
-        input.id = `${selectId}_search`;
-        input.setAttribute('list', listId);
-        input.setAttribute('autocomplete', 'off');
-        input.setAttribute('aria-label', select.getAttribute('aria-label') || 'Pesquisar opção');
-        input.placeholder = select.options[select.selectedIndex]?.disabled
-            ? select.options[select.selectedIndex].textContent.trim()
-            : 'Digite para pesquisar...';
-        input.className = select.className.replace(/\bcursor-pointer\b/g, '').replace(/\btruncate\b/g, '');
-        list.id = listId;
-
-        select.parentNode.insertBefore(input, select);
-        select.parentNode.insertBefore(list, select);
-        select.classList.add('hidden');
-        select.dataset.searchReady = 'true';
-
-        const getOptions = () => Array.from(select.options)
-            .filter(option => !option.disabled && option.value)
-            .map(option => ({ value: option.value, label: option.textContent.trim() }));
-
-        const render = query => {
-            const normalizedQuery = this.normalizeSearchText(query);
-            const ranked = getOptions()
-                .map(option => {
-                    const normalizedLabel = this.normalizeSearchText(option.label);
-                    const position = normalizedLabel.indexOf(normalizedQuery);
-                    return { ...option, position };
-                })
-                .filter(option => !normalizedQuery || option.position >= 0)
-                .sort((a, b) => {
-                    if (a.position !== b.position) return a.position - b.position;
-                    return a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' });
-                });
-            list.replaceChildren(...ranked.map(option => {
-                const item = document.createElement('option');
-                item.value = option.label;
-                return item;
-            }));
-        };
-
-        const syncInput = () => {
-            const selected = select.options[select.selectedIndex];
-            input.value = selected && !selected.disabled ? selected.textContent.trim() : '';
-            render(input.value);
-        };
-
-        input.addEventListener('focus', () => {
-            render('');
-            input.select();
-        });
-        input.addEventListener('input', () => {
-            render(input.value);
-            const normalizedValue = this.normalizeSearchText(input.value);
-            const match = getOptions().find(option =>
-                this.normalizeSearchText(option.label) === normalizedValue
-            );
-            if (!match || select.value === match.value) return;
-            select.value = match.value;
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-        input.addEventListener('blur', () => {
-            const normalizedValue = this.normalizeSearchText(input.value);
-            const match = getOptions().find(option =>
-                this.normalizeSearchText(option.label) === normalizedValue
-            );
-            if (!match) syncInput();
-        });
-        select.addEventListener('change', syncInput);
-
-        new MutationObserver(() => {
-            render(input.value);
-            const selected = select.options[select.selectedIndex];
-            if (!input.matches(':focus')) {
-                input.value = selected && !selected.disabled ? selected.textContent.trim() : '';
-            }
-        }).observe(select, { childList: true, subtree: true });
-
-        syncInput();
-    },
-    
     switchTab: function(tabName) {
         const activeClasses = "bg-primary-600 text-white shadow-lg shadow-primary-500/20";
         const inactiveClasses = "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700/50";

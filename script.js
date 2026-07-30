@@ -405,15 +405,14 @@ const app = {
     generateLog: function() {
         const f = { teste: this.getSelectedLogTest(), so: document.getElementById('logSO').value, marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         if(!f.teste || !f.marca) { this.showToast("Preencha Marca e Teste!", "error"); return; }
-        const conflict = this.findScheduleConflict(f);
-        if (conflict) {
-            const noticeKey = this.getScheduleNoticeKey('conflict', f, conflict);
-            this.openScheduleConflictModal(f, conflict, noticeKey);
-            return;
-        }
         const str = `${f.status} - ${f.marca} - ${f.seg} - ${f.teste} - ${f.data.split('-').reverse().join('-')} - ${f.so}`;
         document.getElementById('logResult').textContent = str;
         document.getElementById('logGroup').classList.remove('hidden');
+        return true;
+    },
+    copyLogAndSchedule: function() {
+        if (!this.generateLog()) return;
+        if (!this.checkSync()) return;
         this.copyText('logResult');
     },
     syncEvidences: function() { 
@@ -457,7 +456,6 @@ const app = {
                 select.appendChild(option);
             });
         }
-        this.checkSync();
     },
     getSelectedLogTest: function() {
         const field = document.getElementById('longDurationTestField');
@@ -575,13 +573,13 @@ const app = {
         const f = { teste: this.getSelectedLogTest(), marca: document.getElementById('logMarca').value, seg: document.getElementById('logSegmento').value, status: document.getElementById('logStatus').value, data: document.getElementById('logData').value };
         const scheduledTestMap = this.getScheduledTestMap();
         const scheduleType = scheduledTestMap[f.teste];
-        if (!scheduleType || !f.marca || !f.data || f.status !== 'OK') return;
+        if (!scheduleType || !f.marca || !f.data || f.status !== 'OK') return true;
 
         const conflict = this.findScheduleConflict(f);
         if (conflict) {
             const conflictKey = this.getScheduleNoticeKey('conflict', f, conflict);
             this.openScheduleConflictModal(f, conflict, conflictKey);
-            return;
+            return false;
         }
 
         const existing = this.getStored().find(item =>
@@ -591,7 +589,7 @@ const app = {
         if (existing) {
             const existingKey = this.getScheduleNoticeKey('approved', f, existing);
             this.openApprovedTestModal(existing, { existing: true }, existingKey);
-            return;
+            return true;
         }
 
         document.getElementById('agendaMarca').value = f.marca;
@@ -612,6 +610,7 @@ const app = {
         this.renderTable();
         const approvedKey = this.getScheduleNoticeKey('approved', f, schedule);
         this.openApprovedTestModal(schedule, { compatible }, approvedKey);
+        return true;
     },
     openApprovedTestModal: function(schedule, context = {}, noticeKey = '') {
         if (this.isScheduleNoticeAcknowledged(noticeKey)) return false;
@@ -690,6 +689,18 @@ const app = {
         const data = this.getStored(); data.push(d); localStorage.setItem('qa_scheduler_v2', JSON.stringify(data)); this.renderTable(); this.showToast('Salvo!');
     },
     deleteTest: function(id) { if(confirm("Remover?")) { const data = this.getStored().filter(t => t.id !== id); localStorage.setItem('qa_scheduler_v2', JSON.stringify(data)); this.renderTable(); } },
+    clearAllSchedules: function() {
+        const schedules = this.getStored();
+        if (!schedules.length) {
+            this.showToast('Não há agendamentos para limpar.', 'error');
+            return;
+        }
+        if (!confirm(`Remover todos os ${schedules.length} agendamento(s)? Esta ação não pode ser desfeita.`)) return;
+        localStorage.removeItem('qa_scheduler_v2');
+        this.acknowledgedScheduleNotices?.clear();
+        this.renderTable();
+        this.showToast('Todos os agendamentos foram removidos.');
+    },
     renderTable: function() { 
         const data = this.getStored().sort((a,b) => new Date(a.start) - new Date(b.start));
         const tbody = document.getElementById('scheduleTable'); tbody.innerHTML = '';
@@ -925,7 +936,6 @@ const chicago = {
         if(agendaMarca) agendaMarca.value = selectedBrand;
         if(typeof app !== 'undefined') {
             if(nomenMarca) app.syncEvidences();
-            if(agendaMarca) app.checkSync();
         }
     },
 

@@ -221,14 +221,20 @@ const app = {
         }
         const conflict = this.findScheduleConflict(form);
         if (conflict) {
-            this.openScheduleConflictModal(form, conflict);
+            const noticeKey = this.getScheduleNoticeKey('conflict', form, conflict);
+            this.openScheduleConflictModal(form, conflict, noticeKey);
             return false;
         }
         const compatible = this.findCompatibleSchedule(form);
         if (compatible) {
-            this.openApprovedTestModal(compatible, { existing: true, requestedTest: test });
+            const noticeKey = this.getScheduleNoticeKey('approved', form, compatible);
+            this.openApprovedTestModal(compatible, { existing: true, requestedTest: test }, noticeKey);
         } else {
-            this.showToast('Teste liberado: nenhum agendamento incompatível encontrado.');
+            const noticeKey = this.getScheduleNoticeKey('released', form);
+            if (!this.isScheduleNoticeAcknowledged(noticeKey)) {
+                this.acknowledgeScheduleNotice(noticeKey);
+                this.showToast('Teste liberado: nenhum agendamento incompatível encontrado.');
+            }
         }
         return true;
     },
@@ -401,7 +407,8 @@ const app = {
         if(!f.teste || !f.marca) { this.showToast("Preencha Marca e Teste!", "error"); return; }
         const conflict = this.findScheduleConflict(f);
         if (conflict) {
-            this.openScheduleConflictModal(f, conflict);
+            const noticeKey = this.getScheduleNoticeKey('conflict', f, conflict);
+            this.openScheduleConflictModal(f, conflict, noticeKey);
             return;
         }
         const str = `${f.status} - ${f.marca} - ${f.seg} - ${f.teste} - ${f.data.split('-').reverse().join('-')} - ${f.so}`;
@@ -509,8 +516,33 @@ const app = {
             return newStart <= existingEnd && newEnd >= existingStart;
         }) || null;
     },
-    openScheduleConflictModal: function(form, conflict) {
+    getScheduleNoticeKey: function(type, form, schedule = {}) {
+        return [
+            type,
+            form.teste || schedule.type || '',
+            form.marca || schedule.brand || '',
+            form.seg || schedule.seg || '',
+            form.data || schedule.start || '',
+            schedule.id || ''
+        ].join('|');
+    },
+    isScheduleNoticeAcknowledged: function(noticeKey) {
+        return Boolean(noticeKey && this.acknowledgedScheduleNotices?.has(noticeKey));
+    },
+    acknowledgeScheduleNotice: function(noticeKey) {
+        if (!noticeKey) return;
+        if (!this.acknowledgedScheduleNotices) this.acknowledgedScheduleNotices = new Set();
+        this.acknowledgedScheduleNotices.add(noticeKey);
+    },
+    acknowledgeModalNotice: function(modal) {
+        const noticeKey = modal?.dataset.noticeKey;
+        if (noticeKey) this.acknowledgeScheduleNotice(noticeKey);
+        if (modal) delete modal.dataset.noticeKey;
+    },
+    openScheduleConflictModal: function(form, conflict, noticeKey = '') {
+        if (this.isScheduleNoticeAcknowledged(noticeKey)) return false;
         const modal = document.getElementById('scheduleConflictModal');
+        modal.dataset.noticeKey = noticeKey;
         const requestedRule = this.getBalanceRule(this.getScheduledTestMap()[form.teste]);
         const messages = {
             zero: 'Este teste exige conta sem saldo, mas existe um teste com saldo agendado no mesmo período.',
@@ -526,9 +558,11 @@ const app = {
             modal.classList.remove('opacity-0');
             modal.firstElementChild.classList.remove('scale-95');
         }, 10);
+        return true;
     },
     closeScheduleConflictModal: function() {
         const modal = document.getElementById('scheduleConflictModal');
+        this.acknowledgeModalNotice(modal);
         modal.classList.add('opacity-0');
         modal.firstElementChild.classList.add('scale-95');
         setTimeout(() => modal.classList.add('hidden'), 300);
@@ -545,25 +579,18 @@ const app = {
 
         const conflict = this.findScheduleConflict(f);
         if (conflict) {
-            const conflictKey = `${f.teste}|${f.marca}|${f.seg}|${f.data}|${conflict.id}`;
-            if (this.lastScheduleConflictKey !== conflictKey) {
-                this.lastScheduleConflictKey = conflictKey;
-                this.openScheduleConflictModal(f, conflict);
-            }
+            const conflictKey = this.getScheduleNoticeKey('conflict', f, conflict);
+            this.openScheduleConflictModal(f, conflict, conflictKey);
             return;
         }
-        this.lastScheduleConflictKey = null;
 
         const existing = this.getStored().find(item =>
             item.brand === f.marca && item.seg === f.seg &&
             item.type === scheduleType && item.start === f.data
         );
         if (existing) {
-            const existingKey = `existing|${existing.id}`;
-            if (this.lastCompatibleScheduleKey !== existingKey) {
-                this.lastCompatibleScheduleKey = existingKey;
-                this.openApprovedTestModal(existing, { existing: true });
-            }
+            const existingKey = this.getScheduleNoticeKey('approved', f, existing);
+            this.openApprovedTestModal(existing, { existing: true }, existingKey);
             return;
         }
 
@@ -583,10 +610,13 @@ const app = {
         data.push(schedule);
         localStorage.setItem('qa_scheduler_v2', JSON.stringify(data));
         this.renderTable();
-        this.openApprovedTestModal(schedule, { compatible });
+        const approvedKey = this.getScheduleNoticeKey('approved', f, schedule);
+        this.openApprovedTestModal(schedule, { compatible }, approvedKey);
     },
-    openApprovedTestModal: function(schedule, context = {}) {
+    openApprovedTestModal: function(schedule, context = {}, noticeKey = '') {
+        if (this.isScheduleNoticeAcknowledged(noticeKey)) return false;
         const modal = document.getElementById('approvedTestModal');
+        modal.dataset.noticeKey = noticeKey;
         document.getElementById('approvedTestTitle').textContent = context.existing ? 'Teste compatível' : 'Teste aprovado';
         document.getElementById('approvedTestName').textContent = context.requestedTest || schedule.type;
         document.getElementById('approvedScheduleStatus').textContent = context.existing
@@ -602,9 +632,11 @@ const app = {
             modal.classList.remove('opacity-0');
             modal.firstElementChild.classList.remove('scale-95');
         }, 10);
+        return true;
     },
     closeApprovedTestModal: function() {
         const modal = document.getElementById('approvedTestModal');
+        this.acknowledgeModalNotice(modal);
         modal.classList.add('opacity-0');
         modal.firstElementChild.classList.add('scale-95');
         setTimeout(() => modal.classList.add('hidden'), 300);

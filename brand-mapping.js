@@ -15,8 +15,8 @@
                                 },
     "Banco do Nordeste do Brasil S.A.":  {
                                              "asId":  {
-                                                          "PJ":  "6370a748-6bda-4a37-9e88-5e68cc4cf100",
-                                                          "PF":  "6370a748-6bda-4a37-9e88-5e68cc4cf100"
+                                                          "PJ":  "6ec597a9-facd-4513-b168-7b8358314c06",
+                                                          "PF":  "6ec597a9-facd-4513-b168-7b8358314c06"
                                                       },
                                              "alias":  "a60b7fb5-f7f3-5536-a41f-1bff137f47d1"
                                          },

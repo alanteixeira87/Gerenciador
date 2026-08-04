@@ -1037,8 +1037,8 @@
                          },
     "Shopee - Pagamento":  {
                                "asId":  {
-                                            "PJ":  "99fb53a6-7da8-4482-ad40-209c0111c271",
-                                            "PF":  "99fb53a6-7da8-4482-ad40-209c0111c271"
+                                            "PJ":  "b35f5047-eaae-47ee-9e66-4ceab834b2fe",
+                                            "PF":  "b35f5047-eaae-47ee-9e66-4ceab834b2fe"
                                         },
                                "alias":  "96748716-9b96-448c-a2b7-2abf9762af8e"
                            },

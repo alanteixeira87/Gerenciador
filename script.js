@@ -76,6 +76,7 @@ const app = {
         this.setupUpdateWatcher();
         lucide.createIcons();
         this.syncEvidences();
+        this.loadReportSignature();
         this.updateErrorReport();
 
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -724,9 +725,22 @@ const app = {
         }
         document.getElementById('agendaInstrucoes').value = txt;
     },
+    loadReportSignature: function() {
+        const input = document.getElementById('qaReportSignature');
+        if (input) input.value = localStorage.getItem('qa_report_signature') || '';
+    },
+    saveReportSignature: function() {
+        const input = document.getElementById('qaReportSignature');
+        if (!input) return;
+        localStorage.setItem('qa_report_signature', input.value);
+        this.updateErrorReport();
+    },
     updateErrorReport: function() { 
         const stage = document.getElementById('errorStage').value;
-        document.getElementById('errorResult').value = REPORT_TEMPLATES[stage] || "";
+        const template = REPORT_TEMPLATES[stage] || "";
+        const signature = document.getElementById('qaReportSignature')?.value.trim() || '';
+        const footer = signature ? `\n${signature}\nEquipe de serviços FVP` : '';
+        document.getElementById('errorResult').value = template + footer;
     },
     insertRaidiamText: function() { this.updateErrorReport(); },
     getStored: () => JSON.parse(localStorage.getItem('qa_scheduler_v2') || '[]'),

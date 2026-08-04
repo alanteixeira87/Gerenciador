@@ -73,6 +73,7 @@ const app = {
         if(document.getElementById('logData')) document.getElementById('logData').valueAsDate = new Date();
         this.renderTable();
         this.setupListeners();
+        this.setupUpdateWatcher();
         lucide.createIcons();
         this.syncEvidences();
         this.updateErrorReport();
@@ -354,6 +355,52 @@ const app = {
         }
     },
 
+    getAssetVersionSignature: function(root) {
+        return ['brand-mapping.js', 'script.js'].map(fileName => {
+            const element = [...root.querySelectorAll('script[src]')].find(script => {
+                try {
+                    return new URL(script.getAttribute('src'), window.location.href).pathname.endsWith(`/${fileName}`);
+                } catch {
+                    return false;
+                }
+            });
+            return element?.getAttribute('src') || '';
+        }).join('|');
+    },
+
+    checkForUpdate: async function() {
+        if(this.updateCheckInProgress || this.updateReloadScheduled) return;
+        this.updateCheckInProgress = true;
+        try {
+            const checkUrl = new URL(window.location.href);
+            checkUrl.searchParams.set('_updateCheck', Date.now().toString());
+            const response = await fetch(checkUrl, { cache: 'no-store', credentials: 'same-origin' });
+            if(!response.ok) return;
+            const latestDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const currentVersion = this.getAssetVersionSignature(document);
+            const latestVersion = this.getAssetVersionSignature(latestDocument);
+            if(latestVersion && currentVersion !== latestVersion) {
+                this.updateReloadScheduled = true;
+                this.showToast('Nova versão disponível. Atualizando automaticamente...');
+                setTimeout(() => {
+                    const reloadUrl = new URL(window.location.href);
+                    reloadUrl.searchParams.delete('_updateCheck');
+                    reloadUrl.searchParams.set('_appVersion', Date.now().toString());
+                    window.location.replace(reloadUrl.toString());
+                }, 1500);
+            }
+        } catch {
+            // A ausência temporária de rede não deve interromper o uso da ferramenta.
+        } finally {
+            this.updateCheckInProgress = false;
+        }
+    },
+
+    setupUpdateWatcher: function() {
+        setInterval(() => this.checkForUpdate(), 60000);
+        window.addEventListener('focus', () => this.checkForUpdate());
+    },
+
     switchTab: function(tabName) {
         const activeClasses = "bg-primary-600 text-white shadow-lg shadow-primary-500/20";
         const inactiveClasses = "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700/50";
@@ -418,11 +465,11 @@ const app = {
     syncEvidences: function() { 
         const marca = document.getElementById('logMarca').value || "...";
         const seg = document.getElementById('logSegmento').value;
-        document.getElementById('evResult1').textContent = `Evidência - ${marca} - ${seg} - Saldo`;
-        document.getElementById('evResult2').textContent = `Evidência - ${marca} - ${seg} - Versão app`;
-        document.getElementById('evResult3').textContent = `Evidência - ${marca} - ${seg} - Mensagem de erro`;
+        document.getElementById('evResult1').textContent = `Saldo - ${seg} - ${marca}`;
+        document.getElementById('evResult2').textContent = `Versão app - ${seg} - ${marca}`;
+        document.getElementById('evResult3').textContent = `Mensagem de erro - ${seg} - ${marca}`;
         const evResult4 = document.getElementById('evResult4');
-        if(evResult4) evResult4.textContent = `Evidência - ${marca} - ${seg} - Saldo zerado`;
+        if(evResult4) evResult4.textContent = `Saldo zerado - ${seg} - ${marca}`;
     },
     copyText: function(id) {
         const el = document.getElementById(id);

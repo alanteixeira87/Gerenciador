@@ -466,11 +466,11 @@ const app = {
     syncEvidences: function() { 
         const marca = document.getElementById('logMarca').value || "...";
         const seg = document.getElementById('logSegmento').value;
-        document.getElementById('evResult1').textContent = `Saldo - ${seg} - ${marca}`;
-        document.getElementById('evResult2').textContent = `Versão app - ${seg} - ${marca}`;
-        document.getElementById('evResult3').textContent = `Mensagem de erro - ${seg} - ${marca}`;
+        document.getElementById('evResult1').textContent = `Saldo - ${marca} - ${seg}`;
+        document.getElementById('evResult2').textContent = `Versão app - ${marca} - ${seg}`;
+        document.getElementById('evResult3').textContent = `Mensagem de erro - ${marca} - ${seg}`;
         const evResult4 = document.getElementById('evResult4');
-        if(evResult4) evResult4.textContent = `Saldo zerado - ${seg} - ${marca}`;
+        if(evResult4) evResult4.textContent = `Saldo zerado - ${marca} - ${seg}`;
     },
     copyText: function(id) {
         const el = document.getElementById(id);

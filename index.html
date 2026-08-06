@@ -189,6 +189,26 @@
         </div>
     </div>
 
+    <div id="sdTicketConfirmationModal" class="fixed inset-0 z-[118] bg-slate-900/80 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex" role="dialog" aria-modal="true" aria-labelledby="sdTicketConfirmationTitle">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-amber-200 dark:border-amber-500/30 transform transition-transform scale-95">
+            <div class="p-6 text-center">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                    <i data-lucide="ticket-check" size="28"></i>
+                </div>
+                <h3 id="sdTicketConfirmationTitle" class="text-xl font-bold text-gray-900 dark:text-white">Confirme o SDticket</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Verifique se o número informado está correto antes de copiar o código.</p>
+                <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                    <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">SDticket informado</p>
+                    <p id="sdTicketConfirmationValue" class="mt-2 break-all font-mono text-lg font-bold text-gray-900 dark:text-white"></p>
+                </div>
+            </div>
+            <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 sm:flex-row sm:justify-end dark:border-slate-700 dark:bg-slate-800 rounded-b-2xl">
+                <button onclick="app.returnToSdTicketValidation()" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Validar</button>
+                <button onclick="app.confirmSdTicketAndCopy()" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95">OK</button>
+            </div>
+        </div>
+    </div>
+
     <div id="imageModal" class="fixed inset-0 z-[120] bg-slate-900/90 blur-bg items-center justify-center p-4 transition-opacity duration-300 hidden opacity-0 flex" onclick="app.closeImageModal()">
         <div class="relative max-w-full max-h-full flex justify-center items-center" onclick="event.stopPropagation()">
             <button onclick="app.closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
@@ -532,7 +552,7 @@
                     <div class="bg-[#1e1e1e] rounded-2xl shadow-xl flex-1 flex flex-col overflow-hidden relative border border-gray-800 min-h-[400px]">
                         <div class="px-5 py-3 bg-[#2d2d2d] flex justify-between items-center border-b border-black">
                             <span class="text-xs font-mono text-gray-400 flex items-center gap-2"><i data-lucide="terminal" size="14"></i> payload_request.json</span>
-                            <button onclick="app.copyText('chi_result')" class="text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-lg transition">
+                            <button onclick="app.requestChicagoResultCopy()" class="text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-lg transition">
                                 <i data-lucide="copy" size="14"></i> Copiar Código
                             </button>
                         </div>

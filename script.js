@@ -477,6 +477,55 @@ const app = {
         const txt = el.value !== undefined ? el.value : el.textContent;
         navigator.clipboard.writeText(txt).then(() => this.showToast('Copiado para a área de transferência!'));
     },
+    requestChicagoResultCopy: function() {
+        const result = document.getElementById('chi_result');
+        const resultText = result?.value?.trim() || '';
+        if (!resultText || resultText.includes('// Preencha os campos')) {
+            this.showToast('Gere um JSON primeiro antes de copiar!', 'error');
+            return;
+        }
+
+        const executionType = document.getElementById('chi_execution_type')?.value || 'Test';
+        if (executionType !== 'Retest') {
+            this.copyText('chi_result');
+            return;
+        }
+
+        const sdTicketInput = document.getElementById('chi_sd_ticket');
+        const sdTicket = sdTicketInput?.value?.trim() || '';
+        if (!sdTicket) {
+            this.showToast('Informe o número do SDticket antes de copiar.', 'error');
+            sdTicketInput?.focus();
+            return;
+        }
+
+        document.getElementById('sdTicketConfirmationValue').textContent = sdTicket;
+        const modal = document.getElementById('sdTicketConfirmationModal');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.firstElementChild.classList.remove('scale-95');
+        }, 10);
+    },
+    closeSdTicketConfirmationModal: function() {
+        const modal = document.getElementById('sdTicketConfirmationModal');
+        modal.classList.add('opacity-0');
+        modal.firstElementChild.classList.add('scale-95');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    },
+    confirmSdTicketAndCopy: function() {
+        this.closeSdTicketConfirmationModal();
+        this.copyText('chi_result');
+    },
+    returnToSdTicketValidation: function() {
+        this.closeSdTicketConfirmationModal();
+        const sdTicketInput = document.getElementById('chi_sd_ticket');
+        setTimeout(() => {
+            sdTicketInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            sdTicketInput?.focus();
+            sdTicketInput?.select();
+        }, 300);
+    },
     getLongDurationPlans: function() {
         return {
             "Automatic Payments API v2.2 - Scheduling": [

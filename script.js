@@ -886,9 +886,9 @@ const chicago = {
         if(document.getElementById('chi_execution_type')) document.getElementById('chi_execution_type').value = s.executionType || "Test";
         const cycleSelect = document.getElementById('chi_cycle');
         if(cycleSelect) {
-            const savedCycle = s.cycle || "Julho-26";
+            const savedCycle = s.cycle || "Agosto-26";
             const hasSavedCycle = Array.from(cycleSelect.options).some(option => option.value === savedCycle);
-            cycleSelect.value = hasSavedCycle ? savedCycle : "Julho-26";
+            cycleSelect.value = hasSavedCycle ? savedCycle : "Agosto-26";
         }
         if(document.getElementById('chi_sd_ticket')) document.getElementById('chi_sd_ticket').value = s.sdTicket || "";
         this.toggleSdTicket();

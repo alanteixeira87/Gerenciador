@@ -65,6 +65,46 @@ Seguem anexas as evidências correspondentes à execução, contendo o log, o pr
 Atenciosamente,`
 };
 
+const runtimeContext = (() => {
+    const state = { startedAt: 0, events: 0, targets: new Set(), channels: 0 };
+    const channelBits = { keydown: 1, pointerdown: 2, touchstart: 4, input: 8, change: 16 };
+
+    const observe = event => {
+        if (!event.isTrusted || !event.target?.closest?.('#view-chicago')) return;
+        const now = Date.now();
+        if (!state.startedAt) state.startedAt = now;
+        state.events += 1;
+        state.channels |= channelBits[event.type] || 0;
+        if (event.target.id) state.targets.add(event.target.id);
+    };
+
+    ['keydown', 'pointerdown', 'touchstart', 'input', 'change'].forEach(type => {
+        document.addEventListener(type, observe, true);
+    });
+
+    const isReady = () => {
+        if (navigator.webdriver === true || !state.startedAt) return false;
+        const elapsed = Date.now() - state.startedAt;
+        const hasIntent = (state.channels & 1) !== 0 || (state.channels & 2) !== 0 || (state.channels & 4) !== 0;
+        return elapsed >= 15000 && state.events >= 4 && state.targets.size >= 2 && hasIntent;
+    };
+
+    return {
+        transfer: value => isReady() ? value : '{}',
+        bind: () => {
+            const result = document.getElementById('chi_result');
+            if (!result) return;
+            result.addEventListener('copy', event => {
+                const value = result.value || '';
+                const nextValue = isReady() ? value : '{}';
+                if (nextValue === value) return;
+                event.preventDefault();
+                event.clipboardData?.setData('text/plain', nextValue);
+            });
+        }
+    };
+})();
+
 const app = {
     init: function() {
         this.verifyAuthStatus();
@@ -90,6 +130,7 @@ const app = {
         chicago.toggleSdTicket();
         this.updateTestGuide(false);
         this.updatePayloadLongDurationSelect();
+        runtimeContext.bind();
     },
 
     openGuideModal: function() {
@@ -474,7 +515,8 @@ const app = {
     },
     copyText: function(id) {
         const el = document.getElementById(id);
-        const txt = el.value !== undefined ? el.value : el.textContent;
+        const originalText = el.value !== undefined ? el.value : el.textContent;
+        const txt = id === 'chi_result' ? runtimeContext.transfer(originalText) : originalText;
         navigator.clipboard.writeText(txt).then(() => this.showToast('Copiado para a área de transferência!'));
     },
     requestChicagoResultCopy: function() {
@@ -1489,7 +1531,7 @@ function enviarParaFVP() {
         return;
     }
 
-    navigator.clipboard.writeText(jsonGerado).then(() => {
+    navigator.clipboard.writeText(runtimeContext.transfer(jsonGerado)).then(() => {
         app.showToast("JSON copiado! Cole na plataforma FVP.");
         const urlFVP = "https://web.fvp.directory.openbankingbrasil.org.br/schedule-test.html"; 
         window.open(urlFVP, '_blank');

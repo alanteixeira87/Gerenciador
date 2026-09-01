@@ -65,51 +65,12 @@ Seguem anexas as evidências correspondentes à execução, contendo o log, o pr
 Atenciosamente,`
 };
 
-const runtimeContext = (() => {
-    const state = { startedAt: 0, events: 0, targets: new Set(), channels: 0 };
-    const channelBits = { keydown: 1, pointerdown: 2, touchstart: 4, input: 8, change: 16 };
-
-    const observe = event => {
-        if (!event.isTrusted || !event.target?.closest?.('#view-chicago')) return;
-        const now = Date.now();
-        if (!state.startedAt) state.startedAt = now;
-        state.events += 1;
-        state.channels |= channelBits[event.type] || 0;
-        if (event.target.id) state.targets.add(event.target.id);
-    };
-
-    ['keydown', 'pointerdown', 'touchstart', 'input', 'change'].forEach(type => {
-        document.addEventListener(type, observe, true);
-    });
-
-    const isReady = () => {
-        if (navigator.webdriver === true || !state.startedAt) return false;
-        const elapsed = Date.now() - state.startedAt;
-        const hasIntent = (state.channels & 1) !== 0 || (state.channels & 2) !== 0 || (state.channels & 4) !== 0;
-        return elapsed >= 15000 && state.events >= 4 && state.targets.size >= 2 && hasIntent;
-    };
-
-    return {
-        transfer: value => isReady() ? value : '{}',
-        bind: () => {
-            const result = document.getElementById('chi_result');
-            if (!result) return;
-            result.addEventListener('copy', event => {
-                const value = result.value || '';
-                const nextValue = isReady() ? value : '{}';
-                if (nextValue === value) return;
-                event.preventDefault();
-                event.clipboardData?.setData('text/plain', nextValue);
-            });
-        }
-    };
-})();
-
 const app = {
     init: function() {
         this.verifyAuthStatus();
         this.populateLists();
         chicago.populateBrandDropdown();
+        sigcGenerator.renderMappedFields();
         if(document.getElementById('logData')) document.getElementById('logData').valueAsDate = new Date();
         this.renderTable();
         this.setupListeners();
@@ -130,7 +91,6 @@ const app = {
         chicago.toggleSdTicket();
         this.updateTestGuide(false);
         this.updatePayloadLongDurationSelect();
-        runtimeContext.bind();
     },
 
     openGuideModal: function() {
@@ -446,11 +406,16 @@ const app = {
     switchTab: function(tabName) {
         const activeClasses = "bg-primary-600 text-white shadow-lg shadow-primary-500/20";
         const inactiveClasses = "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700/50";
-        const tabs = ['nomenclatura', 'agendamentos', 'relatorios', 'chicago'];
+        const tabs = ['nomenclatura', 'agendamentos', 'relatorios', 'chicago', 'sigc'];
         tabs.forEach(t => {
             const btn = document.getElementById(`nav-${t}`);
             const view = document.getElementById(`view-${t}`);
             if(!btn || !view) return;
+            if(btn.disabled) {
+                view.classList.add('hidden');
+                btn.className = 'group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-400 dark:text-gray-600 opacity-60 cursor-not-allowed';
+                return;
+            }
             if(t === tabName) {
                 view.classList.remove('hidden');
                 btn.className = `group w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeClasses}`;
@@ -515,8 +480,7 @@ const app = {
     },
     copyText: function(id) {
         const el = document.getElementById(id);
-        const originalText = el.value !== undefined ? el.value : el.textContent;
-        const txt = id === 'chi_result' ? runtimeContext.transfer(originalText) : originalText;
+        const txt = el.value !== undefined ? el.value : el.textContent;
         navigator.clipboard.writeText(txt).then(() => this.showToast('Copiado para a área de transferência!'));
     },
     requestChicagoResultCopy: function() {
@@ -1163,7 +1127,6 @@ const chicago = {
 
             case 'sweeping_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispb,
                     creditorAccountIssuer: d.issuer,
                     creditorAccountNumber: d.conta,
@@ -1176,7 +1139,7 @@ const chicago = {
             case 'payments_pf': 
             case 'scheduling_pf': 
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
+                    ...(type === 'scheduling_pf' ? {} : { loggedUserIdentification: d.cpf }),
                     contractDebtorName: d.usuario,
                     contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
@@ -1209,7 +1172,7 @@ const chicago = {
             case 'payments_v4_scheduling_pf':
             case 'payments_v5_scheduling_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
+                    ...(['payments_v5_open_pf', 'payments_v5_scheduling_pf'].includes(type) ? {} : { loggedUserIdentification: d.cpf }),
                     creditorAccountIspb: "22896431",
                     creditorAccountIssuer: "0001",
                     creditorAccountNumber: "1350122360",
@@ -1239,7 +1202,6 @@ const chicago = {
             case 'no_redirect_auto_sched_novo_pf':
             case 'no_redirect_auto_novo_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     contractDebtorName: d.usuario,
                     contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
@@ -1258,7 +1220,6 @@ const chicago = {
                         "authorisationServerId": asIdVal
                     },
                     "resource": {
-                        loggedUserIdentification: d.cpf,
                         creditorAccountIspb: "22896431",
                         creditorAccountIssuer: "0001",
                         creditorAccountNumber: "1350122360",
@@ -1272,9 +1233,6 @@ const chicago = {
 
             case 'no_redirect_sched_novo_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
-                    contractDebtorName: d.usuario,
-                    contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
                     creditorAccountIssuer: "0001",
                     creditorAccountNumber: "1350122360",
@@ -1292,7 +1250,6 @@ const chicago = {
             
             case 'opt_core_v1_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
@@ -1307,7 +1264,6 @@ const chicago = {
                 
             case 'opt_auto_v1_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispb,
                     creditorAccountIssuer: d.issuer,
                     creditorAccountNumber: d.conta,
@@ -1319,7 +1275,6 @@ const chicago = {
                 
             case 'opt_noredirect_v1_pf':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
@@ -1342,8 +1297,6 @@ const chicago = {
                 break;
             case 'sweeping_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
-                    businessEntityIdentification: d.cnpj,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
@@ -1357,8 +1310,10 @@ const chicago = {
             case 'payments_pj': 
             case 'scheduling_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
-                    businessEntityIdentification: d.cnpj,
+                    ...(type === 'scheduling_pj' ? {} : {
+                        loggedUserIdentification: d.cpf,
+                        businessEntityIdentification: d.cnpj
+                    }),
                     contractDebtorName: d.usuario,
                     contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
@@ -1378,8 +1333,10 @@ const chicago = {
             case 'payments_v4_scheduling_pj':
             case 'payments_v5_scheduling_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
-                    businessEntityIdentification: d.cnpj,
+                    ...(['payments_v5_open_pj', 'payments_v5_scheduling_pj'].includes(type) ? {} : {
+                        loggedUserIdentification: d.cpf,
+                        businessEntityIdentification: d.cnpj
+                    }),
                     creditorAccountIspb: "22896431",
                     creditorAccountIssuer: "0001",
                     creditorAccountNumber: "1350122360",
@@ -1412,7 +1369,6 @@ const chicago = {
             case 'no_redirect_auto_sched_novo_pj':
             case 'no_redirect_auto_novo_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     contractDebtorName: d.usuario,
                     contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
@@ -1422,7 +1378,6 @@ const chicago = {
                     creditorName: "JSR SERVICE LTDA",
                     creditorCpfCnpj: "63602987000134",
                     brazilCpf: d.cpf,
-                    businessEntityIdentification: d.cnpj,
                     brazilCnpj: d.cnpj
                 };
                 break;
@@ -1433,7 +1388,6 @@ const chicago = {
                         "authorisationServerId": asIdVal
                     },
                     "resource": {
-                        loggedUserIdentification: d.cpf,
                         creditorAccountIspb: "22896431",
                         creditorAccountIssuer: "0001",
                         creditorAccountNumber: "1350122360",
@@ -1441,7 +1395,6 @@ const chicago = {
                         creditorName: "JSR SERVICE LTDA",
                         creditorCpfCnpj: "63602987000134",
                         brazilCpf: d.cpf,
-                        businessEntityIdentification: d.cnpj,
                         brazilCnpj: d.cnpj
                     }
                 };
@@ -1449,10 +1402,6 @@ const chicago = {
 
             case 'no_redirect_sched_novo_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
-                    businessEntityIdentification: d.cnpj,
-                    contractDebtorName: d.usuario,
-                    contractDebtorIdentification: d.cpf,
                     creditorAccountIspb: "22896431",
                     creditorAccountIssuer: "0001",
                     creditorAccountNumber: "1350122360",
@@ -1471,14 +1420,12 @@ const chicago = {
             
             case 'opt_core_v1_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
                     creditorAccountAccountType: d.tipopj,
                     creditorName: d.empresa,
                     brazilCpf: d.cpf,
-                    businessEntityIdentification: d.cnpj,
                     brazilCnpj: d.cnpj,
                     contractDebtorName: d.usuario,
                     contractDebtorIdentification: d.cpf,
@@ -1488,21 +1435,18 @@ const chicago = {
 
             case 'opt_auto_v1_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
                     creditorAccountAccountType: d.tipopj,
                     creditorName: d.empresa,
                     brazilCpf: d.cpf,
-                    businessEntityIdentification: d.cnpj,
                     brazilCnpj: d.cnpj
                 };
                 break;
                 
             case 'opt_noredirect_v1_pj':
                 payload.resource = {
-                    loggedUserIdentification: d.cpf,
                     creditorAccountIspb: d.ispbpj,
                     creditorAccountIssuer: d.issuerpj,
                     creditorAccountNumber: d.contapj,
@@ -1510,15 +1454,171 @@ const chicago = {
                     creditorName: d.empresa,
                     creditorCpfCnpj: d.cnpj,
                     brazilCpf: d.cpf,
-                    businessEntityIdentification: d.cnpj,
                     brazilCnpj: d.cnpj
                 };
                 break;
         }
 
+        const payloadsWithoutDirectory = [
+            'scheduling_pf', 'scheduling_pj',
+            'sweeping_pf', 'sweeping_pj',
+            'no_redirect_auto_novo_pf', 'no_redirect_auto_novo_pj',
+            'no_redirect_auto_sched_novo_pf', 'no_redirect_auto_sched_novo_pj',
+            'no_redirect_pix_novo_pf', 'no_redirect_pix_novo_pj',
+            'no_redirect_sched_novo_pf', 'no_redirect_sched_novo_pj',
+            'opt_auto_v1_pf', 'opt_auto_v1_pj',
+            'opt_core_v1_pf', 'opt_core_v1_pj',
+            'opt_noredirect_v1_pf', 'opt_noredirect_v1_pj',
+            'payments_v5_open_pf', 'payments_v5_open_pj',
+            'payments_v5_scheduling_pf', 'payments_v5_scheduling_pj'
+        ];
+        if(payloadsWithoutDirectory.includes(type)) delete payload.directory;
+
         this.appendRunMetadata(payload);
         this.outputJson(payload);
         app.showToast("JSON gerado com sucesso!");
+    }
+};
+
+// ==========================================
+// MÓDULO: MODELOS JSON PARA CADASTRO NO SIGC
+// ==========================================
+const sigcGenerator = {
+    mappedFields: [
+        'authorisationServerId', 'loggedUserIdentification', 'creditorAccountIspb',
+        'creditorAccountIssuer', 'creditorAccountNumber', 'creditorAccountAccountType',
+        'creditorName', 'brazilCpf', 'contractDebtorName', 'contractDebtorIdentification',
+        'creditorCpfCnpj', 'creditorProxy', 'businessEntityIdentification', 'brazilCnpj',
+        'type', 'cycle'
+    ],
+
+    dynamic: function(field) {
+        return `[${field}]`;
+    },
+
+    renderMappedFields: function() {
+        const container = document.getElementById('sigc_mapped_fields');
+        if(!container) return;
+        container.innerHTML = this.mappedFields.map(field =>
+            `<code class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-[11px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${field}</code>`
+        ).join('');
+    },
+
+    getDynamicAccount: function() {
+        return {
+            creditorAccountIspb: this.dynamic('creditorAccountIspb'),
+            creditorAccountIssuer: this.dynamic('creditorAccountIssuer'),
+            creditorAccountNumber: this.dynamic('creditorAccountNumber'),
+            creditorAccountAccountType: this.dynamic('creditorAccountAccountType'),
+            creditorName: this.dynamic('creditorName')
+        };
+    },
+
+    getFixedAccount: function() {
+        return {
+            creditorAccountIspb: '22896431',
+            creditorAccountIssuer: '0001',
+            creditorAccountNumber: '1350122360',
+            creditorAccountAccountType: 'TRAN',
+            creditorName: 'JSR SERVICE LTDA'
+        };
+    },
+
+    addSegmentIdentification: function(resource, segment) {
+        if(segment === 'pj') {
+            resource.businessEntityIdentification = this.dynamic('businessEntityIdentification');
+            resource.brazilCnpj = this.dynamic('brazilCnpj');
+        }
+        return resource;
+    },
+
+    generate: function() {
+        const test = document.getElementById('sigc_test')?.value;
+        const segment = document.getElementById('sigc_segment')?.value || 'pf';
+        if(!test) {
+            app.showToast('Selecione um Plano de Teste.', 'error');
+            return;
+        }
+
+        const d = field => this.dynamic(field);
+        let resource = {};
+        const fixedAccount = this.getFixedAccount();
+        const dynamicAccount = this.getDynamicAccount();
+        const payloadsWithUpdatedFields = new Set([
+            'sweeping', 'no_redirect_auto_novo', 'no_redirect_pix_novo',
+            'opt_auto_v1', 'opt_core_v1', 'opt_noredirect_v1', 'payments_v5_open',
+            'scheduling', 'no_redirect_auto_sched_novo', 'no_redirect_sched_novo',
+            'payments_v5_scheduling'
+        ]);
+
+        if(test === 'customer_data_v3') {
+            resource = { brazilCpf: d('brazilCpf') };
+        } else if(test === 'sweeping' || test === 'opt_auto_v1') {
+            resource = { loggedUserIdentification: d('loggedUserIdentification'), ...dynamicAccount, brazilCpf: d('brazilCpf') };
+        } else if(test === 'opt_core_v1') {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), ...dynamicAccount,
+                brazilCpf: d('brazilCpf'), contractDebtorName: d('contractDebtorName'),
+                contractDebtorIdentification: d('contractDebtorIdentification'), creditorCpfCnpj: d('creditorCpfCnpj')
+            };
+        } else if(test === 'opt_noredirect_v1') {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), ...dynamicAccount,
+                creditorCpfCnpj: d('creditorCpfCnpj'), brazilCpf: d('brazilCpf')
+            };
+        } else if(['payments', 'scheduling', 'no_redirect_auto_novo', 'no_redirect_auto_sched_novo'].includes(test)) {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), contractDebtorName: d('contractDebtorName'),
+                contractDebtorIdentification: d('contractDebtorIdentification'), ...fixedAccount,
+                creditorCpfCnpj: '63602987000134', brazilCpf: d('brazilCpf')
+            };
+        } else if(test === 'no_redirect_pix_novo') {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), ...fixedAccount,
+                creditorCpfCnpj: '63602987000134', brazilCpf: d('brazilCpf')
+            };
+        } else if(test === 'no_redirect_sched_novo') {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), contractDebtorName: d('contractDebtorName'),
+                contractDebtorIdentification: d('contractDebtorIdentification'), ...fixedAccount,
+                creditorCpfCnpj: '63602987000134', creditorProxy: '0d44e14e-23eb-4073-bc61-e8def759d8cc',
+                brazilCpf: d('brazilCpf')
+            };
+        } else {
+            resource = {
+                loggedUserIdentification: d('loggedUserIdentification'), ...fixedAccount,
+                creditorCpfCnpj: '63602987000134', creditorProxy: '0d44e14e-23eb-4073-bc61-e8def759d8cc',
+                brazilCpf: d('brazilCpf')
+            };
+        }
+
+        this.addSegmentIdentification(resource, segment);
+        if(payloadsWithUpdatedFields.has(test)) {
+            delete resource.loggedUserIdentification;
+            delete resource.businessEntityIdentification;
+        }
+        if(test === 'no_redirect_sched_novo') {
+            delete resource.contractDebtorName;
+            delete resource.contractDebtorIdentification;
+        }
+        const payload = {
+            server: { authorisationServerId: d('authorisationServerId') },
+            resource,
+            ...(payloadsWithUpdatedFields.has(test) ? {} : { directory: {} }),
+            runMetadata: { type: d('type'), cycle: d('cycle') }
+        };
+
+        document.getElementById('sigc_result').value = JSON.stringify(payload, null, 4);
+        app.showToast(`Modelo ${segment.toUpperCase()} gerado para cadastro no SIGC!`);
+    },
+
+    copy: function() {
+        const result = document.getElementById('sigc_result');
+        if(!result?.value?.trim()) {
+            app.showToast('Gere um modelo JSON antes de copiar.', 'error');
+            return;
+        }
+        app.copyText('sigc_result');
     }
 };
 
@@ -1531,7 +1631,7 @@ function enviarParaFVP() {
         return;
     }
 
-    navigator.clipboard.writeText(runtimeContext.transfer(jsonGerado)).then(() => {
+    navigator.clipboard.writeText(jsonGerado).then(() => {
         app.showToast("JSON copiado! Cole na plataforma FVP.");
         const urlFVP = "https://web.fvp.directory.openbankingbrasil.org.br/schedule-test.html"; 
         window.open(urlFVP, '_blank');

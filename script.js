@@ -1243,7 +1243,28 @@ const chicago = {
                     brazilCpf: d.cpf
                 };
                 break;
-                
+
+            case 'account_validation_pf':
+            case 'account_validation_pj':
+                payload = {
+                    "server": {
+                        "authorisationServerId": asIdVal
+                    },
+                    "conditionalResources": {
+                        creditorAccountIspb: "22896431",
+                        creditorAccountIssuer: "0001",
+                        creditorAccountNumber: "1350122360",
+                        creditorAccountAccountType: "TRAN",
+                        creditorName: "JSR SERVICE LTDA",
+                        creditorCpfCnpj: "63602987000134"
+                    },
+                    "resource": {
+                        brazilCpf: d.cpf,
+                        ...(type === 'account_validation_pj' ? { brazilCnpj: d.cnpj } : {})
+                    }
+                };
+                break;
+
             // ==============================
             // OPTIMISED JOURNEY (PF) - DADOS DO USUÁRIO
             // ==============================
@@ -1548,10 +1569,14 @@ const sigcGenerator = {
             'sweeping', 'no_redirect_auto_novo', 'no_redirect_pix_novo',
             'opt_auto_v1', 'opt_core_v1', 'opt_noredirect_v1', 'payments_v5_open',
             'scheduling', 'no_redirect_auto_sched_novo', 'no_redirect_sched_novo',
-            'payments_v5_scheduling'
+            'payments_v5_scheduling', 'account_validation'
         ]);
+        let conditionalResources = null;
 
-        if(test === 'customer_data_v3') {
+        if(test === 'account_validation') {
+            conditionalResources = { ...fixedAccount, creditorCpfCnpj: '63602987000134' };
+            resource = { brazilCpf: d('brazilCpf') };
+        } else if(test === 'customer_data_v3') {
             resource = { brazilCpf: d('brazilCpf') };
         } else if(test === 'sweeping' || test === 'opt_auto_v1') {
             resource = { loggedUserIdentification: d('loggedUserIdentification'), ...dynamicAccount, brazilCpf: d('brazilCpf') };
@@ -1603,6 +1628,7 @@ const sigcGenerator = {
         }
         const payload = {
             server: { authorisationServerId: d('authorisationServerId') },
+            ...(conditionalResources ? { conditionalResources } : {}),
             resource,
             ...(payloadsWithUpdatedFields.has(test) ? {} : { directory: {} }),
             runMetadata: { type: d('type'), cycle: d('cycle') }
